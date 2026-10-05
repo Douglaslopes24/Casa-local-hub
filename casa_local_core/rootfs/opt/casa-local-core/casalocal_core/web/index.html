@@ -114,6 +114,7 @@
     </div>
     <div class="hero-actions">
       <button class="primary" id="scanBtn" onclick="scan()" data-i18n="scan">Buscar dispositivos</button>
+      <button class="secondary" id="mobilePairBtn" onclick="startMobilePairing()" data-i18n="pairApp">Conectar aplicativo</button>
       <button class="secondary" id="pairBtn" onclick="startPairing()" data-i18n="pair">Conectar ao Home Assistant</button>
     </div>
   </section>
@@ -210,7 +211,7 @@ const I18N = {
     keyFail:'Não foi possível validar a chave. Confira a local_key e tente novamente.',
     keyOk:'Comunicação local validada. Agora faça um teste de controle para concluir a validação.',
     partial:'Alguns módulos de descoberta não responderam nesta busca.',
-    pair:'Conectar ao Home Assistant', pairTitle:'Conectar ao Home Assistant',
+    pair:'Conectar ao Home Assistant', pairApp:'Conectar aplicativo', pairTitle:'Código de pareamento',
     pairCopy:'Use este código ao adicionar a integração Casa Local Hub. Ele expira em 5 minutos.',
     close:'Fechar', pairFailed:'Não foi possível iniciar o pareamento.',
     turnOn:'Ligar', turnOff:'Desligar', refreshState:'Atualizar estado', refreshing:'Atualizando…',
@@ -240,7 +241,7 @@ const I18N = {
     keyFail:'The key could not be validated. Check the local_key and try again.',
     keyOk:'Local communication validated. Now run a control test to finish validation.',
     partial:'Some discovery modules did not respond during this scan.',
-    pair:'Connect to Home Assistant', pairTitle:'Connect to Home Assistant',
+    pair:'Connect to Home Assistant', pairApp:'Connect app', pairTitle:'Pairing code',
     pairCopy:'Use this code when adding the Casa Local Hub integration. It expires in 5 minutes.',
     close:'Close', pairFailed:'Could not start pairing.',
     turnOn:'Turn on', turnOff:'Turn off', refreshState:'Refresh state', refreshing:'Refreshing…',
@@ -270,7 +271,7 @@ const I18N = {
     keyFail:'No se pudo validar la clave. Revisa la local_key e inténtalo de nuevo.',
     keyOk:'Comunicación local validada. Ahora realiza una prueba de control para finalizar la validación.',
     partial:'Algunos módulos de descubrimiento no respondieron en esta búsqueda.',
-    pair:'Conectar a Home Assistant', pairTitle:'Conectar a Home Assistant',
+    pair:'Conectar a Home Assistant', pairApp:'Conectar aplicación', pairTitle:'Código de emparejamiento',
     pairCopy:'Usa este código al agregar la integración Casa Local Hub. Caduca en 5 minutos.',
     close:'Cerrar', pairFailed:'No se pudo iniciar el emparejamiento.',
     turnOn:'Encender', turnOff:'Apagar', refreshState:'Actualizar estado', refreshing:'Actualizando…',
@@ -466,6 +467,21 @@ async function toggleTuya(id,dps,value){
     await loadDevices();
   }catch(e){
     notice.textContent=t('commandFailed'); notice.className='notice show';
+  }
+}
+
+async function startMobilePairing(){
+  if(!IS_INGRESS){
+    notice.textContent=t('ingressNeeded'); notice.className='notice show'; return;
+  }
+  try{
+    const response=await fetch('api/v1/mobile/pairing/start',{method:'POST'});
+    const data=await response.json();
+    if(!response.ok) throw new Error(data.detail||t('pairFailed'));
+    document.getElementById('pairCode').textContent=data.code||'--------';
+    pairDialog.showModal();
+  }catch(e){
+    notice.textContent=t('pairFailed'); notice.className='notice show';
   }
 }
 
