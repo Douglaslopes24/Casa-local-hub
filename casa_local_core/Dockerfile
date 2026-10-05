@@ -1,6 +1,6 @@
 FROM python:3.13-alpine
 
-ARG BUILD_VERSION="0.4.0"
+ARG BUILD_VERSION="0.4.1"
 ARG BUILD_ARCH="amd64"
 
 LABEL io.hass.version="${BUILD_VERSION}" \
