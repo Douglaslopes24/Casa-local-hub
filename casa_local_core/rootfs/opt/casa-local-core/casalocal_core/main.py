@@ -12,7 +12,12 @@ from casalocal_core.config import settings
 from casalocal_core.models.device import LocalCapability
 from casalocal_core.services.discovery import DiscoveryManager
 from casalocal_core.services.registry import DeviceRegistry
-from casalocal_core.services.tuya_control import TuyaController, TuyaValidationError
+from casalocal_core.services.tuya_control import (
+    TuyaControlError,
+    TuyaController,
+    TuyaValidationError,
+)
+from casalocal_core.services.tuya_profile import analyze_tuya_dps
 from casalocal_core.services.vault import LocalVault
 
 
@@ -22,6 +27,40 @@ WEB_INDEX = Path(__file__).parent / "web" / "index.html"
 def is_ingress_request(request: Request) -> bool:
     client_host = request.client.host if request.client else ""
     return client_host == "172.30.32.2" and bool(request.headers.get("x-ingress-path"))
+
+
+def require_ingress(request: Request) -> None:
+    if not is_ingress_request(request):
+        raise HTTPException(
+            status_code=403,
+            detail="This action is only available through Home Assistant Ingress.",
+        )
+
+
+def persist_tuya_profile(stable_id: str, profile: dict) -> None:
+    profile_metadata = {key: value for key, value in profile.items() if key != "dps"}
+    app.state.registry.apply_profile(
+        stable_id,
+        kind=str(profile.get("kind") or "unknown"),
+        metadata_updates={
+            "tuya_profile": profile_metadata,
+            "last_dps": profile.get("dps") or {},
+            "last_polled_at": datetime.now(UTC).isoformat(),
+        },
+    )
+
+
+def get_ready_tuya(stable_id: str):
+    device = app.state.registry.get(stable_id)
+    if not device:
+        raise HTTPException(status_code=404, detail="Device not found")
+    if not device.protocol.startswith("tuya"):
+        raise HTTPException(status_code=400, detail="Device is not a Tuya device")
+
+    local_key = app.state.vault.get_secret(stable_id, "tuya_local_key")
+    if not local_key:
+        raise HTTPException(status_code=409, detail="Local key is not configured")
+    return device, local_key
 
 
 @asynccontextmanager
@@ -122,11 +161,7 @@ async def discovery(payload: dict | None = None) -> dict:
 
 @app.post("/api/v1/devices/{stable_id}/tuya/credentials")
 async def set_tuya_credentials(stable_id: str, payload: dict, request: Request) -> dict:
-    if not is_ingress_request(request):
-        raise HTTPException(
-            status_code=403,
-            detail="Credential setup is only available through Home Assistant Ingress.",
-        )
+    require_ingress(request)
 
     device = app.state.registry.get(stable_id)
     if not device:
@@ -140,12 +175,13 @@ async def set_tuya_credentials(stable_id: str, payload: dict, request: Request) 
 
     local_key = local_key.strip()
     try:
-        await app.state.tuya.validate_local_key(device, local_key)
+        status_result = await app.state.tuya.validate_local_key(device, local_key)
+        profile = analyze_tuya_dps(status_result)
     except (TuyaValidationError, OSError, ValueError) as exc:
         raise HTTPException(status_code=422, detail="Local key validation failed") from exc
 
     app.state.vault.set_secret(stable_id, "tuya_local_key", local_key)
-    updated = app.state.registry.set_capability(
+    app.state.registry.set_capability(
         stable_id,
         LocalCapability.LOCAL_CONTROL_READY,
         {
@@ -153,9 +189,68 @@ async def set_tuya_credentials(stable_id: str, payload: dict, request: Request) 
             "credential_source": "manual_ingress",
         },
     )
+    persist_tuya_profile(stable_id, profile)
+    updated = app.state.registry.get(stable_id)
 
     return {
         "status": "ready",
+        "profile": {key: value for key, value in profile.items() if key != "dps"},
+        "device": updated.model_dump(mode="json") if updated else None,
+    }
+
+
+@app.get("/api/v1/devices/{stable_id}/tuya/state")
+async def get_tuya_state(stable_id: str, request: Request) -> dict:
+    require_ingress(request)
+    device, local_key = get_ready_tuya(stable_id)
+
+    try:
+        profile = await app.state.tuya.inspect(device, local_key)
+    except (TuyaValidationError, OSError, ValueError) as exc:
+        raise HTTPException(status_code=502, detail="Could not read device state") from exc
+
+    persist_tuya_profile(stable_id, profile)
+    updated = app.state.registry.get(stable_id)
+    return {
+        "profile": {key: value for key, value in profile.items() if key != "dps"},
+        "dps": profile.get("dps") or {},
+        "device": updated.model_dump(mode="json") if updated else None,
+    }
+
+
+@app.post("/api/v1/devices/{stable_id}/tuya/control")
+async def control_tuya(stable_id: str, payload: dict, request: Request) -> dict:
+    require_ingress(request)
+    device, local_key = get_ready_tuya(stable_id)
+
+    profile = device.metadata.get("tuya_profile")
+    if not isinstance(profile, dict):
+        raise HTTPException(status_code=409, detail="Device profile is not ready")
+
+    requested_dps = str(payload.get("dps") or profile.get("primary_switch_dps") or "")
+    allowed_boolean_dps = {str(item) for item in profile.get("boolean_dps") or []}
+    if not requested_dps or requested_dps not in allowed_boolean_dps:
+        raise HTTPException(status_code=400, detail="DPS is not an approved boolean control")
+
+    value = payload.get("value")
+    if not isinstance(value, bool):
+        raise HTTPException(status_code=400, detail="value must be boolean")
+
+    try:
+        refreshed_profile = await app.state.tuya.set_boolean(
+            device,
+            local_key,
+            requested_dps,
+            value,
+        )
+    except (TuyaValidationError, TuyaControlError, OSError, ValueError) as exc:
+        raise HTTPException(status_code=502, detail="Local command failed") from exc
+
+    persist_tuya_profile(stable_id, refreshed_profile)
+    updated = app.state.registry.get(stable_id)
+    return {
+        "status": "ok",
+        "dps": refreshed_profile.get("dps") or {},
         "device": updated.model_dump(mode="json") if updated else None,
     }
 
