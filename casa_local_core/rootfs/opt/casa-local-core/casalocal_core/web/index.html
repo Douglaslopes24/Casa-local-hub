@@ -196,7 +196,9 @@ const I18N = {
     attentionShort:'Atenção', cameras:'Câmeras', footer:'Processamento local · suas credenciais ficam no seu Home Assistant',
     empty:'Nenhum dispositivo encontrado ainda.', noMatch:'Nenhum dispositivo corresponde a este filtro.',
     unknownDevice:'Dispositivo local', camera:'Câmera local', unknownVendor:'Fabricante não identificado',
-    credentials:'Chave local necessária', localReady:'Local pronto', localPossible:'Controle local possível', discovered:'Encontrado',
+    credentials:'Chave local necessária', localReady:'Dispositivo validado', localPossible:'Comunicação validada', discovered:'Encontrado',
+    testOn:'Testar ligar', testOff:'Testar desligar', validationPending:'Falta validar o controle',
+    validationReady:'Pronto para integrar',
     organize:'Organizar', prepare:'Preparar local', details:'Detalhes técnicos', protocol:'Protocolo',
     address:'Endereço', port:'Porta', type:'Tipo', areaLabel:'Ambiente',
     editTitle:'Organizar dispositivo', editCopy:'Dê um nome simples e escolha o ambiente. Isso fica salvo localmente.',
@@ -206,6 +208,7 @@ const I18N = {
     ingressNeeded:'Para cadastrar credenciais com segurança, abra o Casa Local Hub pelo botão “Abrir interface web” dentro do Home Assistant.',
     saved:'Alterações salvas.', keyOk:'Chave validada. Este dispositivo está pronto para controle local.',
     keyFail:'Não foi possível validar a chave. Confira a local_key e tente novamente.',
+    keyOk:'Comunicação local validada. Agora faça um teste de controle para concluir a validação.',
     partial:'Alguns módulos de descoberta não responderam nesta busca.',
     pair:'Conectar ao Home Assistant', pairTitle:'Conectar ao Home Assistant',
     pairCopy:'Use este código ao adicionar a integração Casa Local Hub. Ele expira em 5 minutos.',
@@ -223,7 +226,9 @@ const I18N = {
     attentionShort:'Attention', cameras:'Cameras', footer:'Local processing · credentials stay in your Home Assistant',
     empty:'No devices found yet.', noMatch:'No devices match this filter.',
     unknownDevice:'Local device', camera:'Local camera', unknownVendor:'Unknown manufacturer',
-    credentials:'Local key required', localReady:'Local ready', localPossible:'Local control possible', discovered:'Discovered',
+    credentials:'Local key required', localReady:'Device validated', localPossible:'Local communication validated', discovered:'Discovered',
+    testOn:'Test turn on', testOff:'Test turn off', validationPending:'Control validation required',
+    validationReady:'Ready to integrate',
     organize:'Organize', prepare:'Set up local', details:'Technical details', protocol:'Protocol',
     address:'Address', port:'Port', type:'Type', areaLabel:'Room',
     editTitle:'Organize device', editCopy:'Give it a simple name and choose a room. This is stored locally.',
@@ -233,6 +238,7 @@ const I18N = {
     ingressNeeded:'To add credentials securely, open Casa Local Hub with “Open Web UI” inside Home Assistant.',
     saved:'Changes saved.', keyOk:'Key validated. This device is ready for local control.',
     keyFail:'The key could not be validated. Check the local_key and try again.',
+    keyOk:'Local communication validated. Now run a control test to finish validation.',
     partial:'Some discovery modules did not respond during this scan.',
     pair:'Connect to Home Assistant', pairTitle:'Connect to Home Assistant',
     pairCopy:'Use this code when adding the Casa Local Hub integration. It expires in 5 minutes.',
@@ -250,7 +256,9 @@ const I18N = {
     attentionShort:'Atención', cameras:'Cámaras', footer:'Procesamiento local · tus credenciales permanecen en Home Assistant',
     empty:'Todavía no se encontraron dispositivos.', noMatch:'Ningún dispositivo coincide con este filtro.',
     unknownDevice:'Dispositivo local', camera:'Cámara local', unknownVendor:'Fabricante no identificado',
-    credentials:'Se requiere clave local', localReady:'Local listo', localPossible:'Control local posible', discovered:'Encontrado',
+    credentials:'Se requiere clave local', localReady:'Dispositivo validado', localPossible:'Comunicación local validada', discovered:'Encontrado',
+    testOn:'Probar encender', testOff:'Probar apagar', validationPending:'Falta validar el control',
+    validationReady:'Listo para integrar',
     organize:'Organizar', prepare:'Preparar local', details:'Detalles técnicos', protocol:'Protocolo',
     address:'Dirección', port:'Puerto', type:'Tipo', areaLabel:'Ambiente',
     editTitle:'Organizar dispositivo', editCopy:'Dale un nombre simple y elige un ambiente. Se guarda localmente.',
@@ -260,6 +268,7 @@ const I18N = {
     ingressNeeded:'Para agregar credenciales de forma segura, abre Casa Local Hub con “Abrir interfaz web” dentro de Home Assistant.',
     saved:'Cambios guardados.', keyOk:'Clave validada. Este dispositivo está listo para control local.',
     keyFail:'No se pudo validar la clave. Revisa la local_key e inténtalo de nuevo.',
+    keyOk:'Comunicación local validada. Ahora realiza una prueba de control para finalizar la validación.',
     partial:'Algunos módulos de descubrimiento no respondieron en esta búsqueda.',
     pair:'Conectar a Home Assistant', pairTitle:'Conectar a Home Assistant',
     pairCopy:'Usa este código al agregar la integración Casa Local Hub. Caduca en 5 minutos.',
@@ -302,9 +311,10 @@ languageEl.addEventListener('change',()=>{lang=languageEl.value;localStorage.set
 function esc(value){ return String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function displayName(d){ return d.friendly_name || d.name || (d.kind==='camera'?t('camera'):t('unknownDevice')); }
 function cap(d){
-  if(d.capability==='local_control_ready') return [t('localReady'),'ok'];
+  const validation=(d.metadata&&d.metadata.validation)||{};
+  if(validation.integratable===true && validation.control==='passed') return [t('localReady'),'ok'];
+  if(validation.communication==='passed') return [t('localPossible'),'warn'];
   if(d.capability==='credentials_required') return [t('credentials'),'warn'];
-  if(d.capability==='local_control_possible') return [t('localPossible'),'ok'];
   return [t('discovered'),''];
 }
 function iconText(d){ if(d.kind==='camera') return 'CAM'; if((d.protocol||'').startsWith('tuya')) return 'TY'; if((d.protocol||'').includes('ewelink')) return 'SW'; return '•'; }
@@ -320,10 +330,15 @@ function matches(d){
 }
 
 function render(){
-  const ready=devices.filter(d=>d.capability==='local_control_ready').length;
+  const ready=devices.filter(d=>((d.metadata||{}).validation||{}).integratable===true).length;
   document.getElementById('totalCount').textContent=devices.length;
   document.getElementById('readyCount').textContent=ready;
   document.getElementById('attentionCount').textContent=devices.length-ready;
+  const pairButton=document.getElementById('pairBtn');
+  if(pairButton){
+    pairButton.disabled=ready===0;
+    pairButton.title=ready===0?t('validationPending'):'';
+  }
 
   const visible=devices.filter(matches);
   if(!devices.length){ grid.innerHTML='<div class="empty">'+esc(t('empty'))+'</div>'; return; }
@@ -331,14 +346,16 @@ function render(){
 
   grid.innerHTML=visible.map(d=>{
     const [badge,badgeClass]=cap(d);
+    const validation=(d.metadata&&d.metadata.validation)||{};
     const canPrepare=(d.protocol||'').startsWith('tuya') && d.capability==='credentials_required';
     const profile=(d.metadata&&d.metadata.tuya_profile)||{};
     const lastDps=(d.metadata&&d.metadata.last_dps)||{};
     const switchDps=profile.primary_switch_dps ? String(profile.primary_switch_dps) : null;
-    const hasTuyaControl=IS_INGRESS && (d.protocol||'').startsWith('tuya') &&
-      d.capability==='local_control_ready' && switchDps &&
+    const canTestTuya=IS_INGRESS && (d.protocol||'').startsWith('tuya') &&
+      validation.communication==='passed' && switchDps &&
       Array.isArray(profile.boolean_dps) && profile.boolean_dps.map(String).includes(switchDps);
-    const currentSwitch=hasTuyaControl ? lastDps[switchDps] : undefined;
+    const isValidated=validation.integratable===true && validation.control==='passed';
+    const currentSwitch=canTestTuya ? lastDps[switchDps] : undefined;
     const stateText=currentSwitch===true?t('stateOn'):currentSwitch===false?t('stateOff'):t('stateUnknown');
     const nextValue=currentSwitch===true ? false : true;
     return `
@@ -356,10 +373,10 @@ function render(){
         <div class="card-actions">
           <button class="secondary" onclick='openEdit(${JSON.stringify(d.stable_id)})'>${esc(t('organize'))}</button>
           ${canPrepare ? `<button class="secondary" onclick='openKey(${JSON.stringify(d.stable_id)})'>${esc(t('prepare'))}</button>` : ''}
-          ${hasTuyaControl ? `<button class="secondary" onclick='toggleTuya(${JSON.stringify(d.stable_id)},${JSON.stringify(switchDps)},${nextValue})'>${esc(currentSwitch===true?t('turnOff'):t('turnOn'))}</button>` : ''}
-          ${hasTuyaControl ? `<button class="secondary" onclick='refreshTuya(${JSON.stringify(d.stable_id)})'>${esc(t('refreshState'))}</button>` : ''}
+          ${canTestTuya ? `<button class="secondary" onclick='toggleTuya(${JSON.stringify(d.stable_id)},${JSON.stringify(switchDps)},${nextValue})'>${esc(isValidated ? (currentSwitch===true?t('turnOff'):t('turnOn')) : (currentSwitch===true?t('testOff'):t('testOn')))}</button>` : ''}
+          ${canTestTuya ? `<button class="secondary" onclick='refreshTuya(${JSON.stringify(d.stable_id)})'>${esc(t('refreshState'))}</button>` : ''}
         </div>
-        ${hasTuyaControl ? `<div class="device-sub" style="margin-top:12px">${esc(stateText)}</div>` : ''}
+        ${canTestTuya ? `<div class="device-sub" style="margin-top:12px">${esc(stateText)} · ${esc(isValidated?t('validationReady'):t('validationPending'))}</div>` : ''}
         <details>
           <summary>${esc(t('details'))}</summary>
           <dl>
@@ -426,6 +443,10 @@ async function refreshTuya(id){
     const data=await response.json();
     if(!response.ok) throw new Error(data.detail||t('commandFailed'));
     await loadDevices();
+    if(data.control_validated===true){
+      notice.textContent=t('validationReady');
+      notice.className='notice show';
+    }
     notice.className='notice';
   }catch(e){
     notice.textContent=t('commandFailed'); notice.className='notice show';
