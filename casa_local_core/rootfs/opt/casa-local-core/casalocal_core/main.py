@@ -137,6 +137,17 @@ async def status() -> dict:
 @app.post("/api/v1/pairing/start")
 async def start_pairing(request: Request) -> dict:
     require_ingress(request)
+    validated = [
+        device
+        for device in app.state.registry.all()
+        if isinstance(device.metadata.get("validation"), dict)
+        and device.metadata["validation"].get("integratable") is True
+    ]
+    if not validated:
+        raise HTTPException(
+            status_code=409,
+            detail="Validate at least one device before pairing Home Assistant.",
+        )
     return app.state.pairing.start()
 
 
@@ -156,7 +167,12 @@ async def complete_pairing(payload: dict) -> dict:
 @app.get("/api/v1/integration/devices")
 async def integration_devices(request: Request) -> dict:
     require_ingress_or_api(request)
-    known = app.state.registry.all()
+    known = [
+        device
+        for device in app.state.registry.all()
+        if isinstance(device.metadata.get("validation"), dict)
+        and device.metadata["validation"].get("integratable") is True
+    ]
     return {
         "count": len(known),
         "devices": [device.model_dump(mode="json") for device in known],
