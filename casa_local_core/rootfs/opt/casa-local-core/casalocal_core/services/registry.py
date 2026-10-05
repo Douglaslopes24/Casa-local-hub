@@ -157,3 +157,34 @@ class DeviceRegistry:
                 (payload, device.last_seen.isoformat(), stable_id),
             )
         return self.get(stable_id)
+
+
+    def apply_profile(
+        self,
+        stable_id: str,
+        *,
+        kind: str,
+        metadata_updates: dict,
+    ) -> DiscoveredDevice | None:
+        with self._connect() as db:
+            row = db.execute(
+                "SELECT * FROM devices WHERE stable_id = ?",
+                (stable_id,),
+            ).fetchone()
+            if not row:
+                return None
+
+            device = self._row_to_device(db, row)
+            try:
+                device.kind = device.kind.__class__(kind)
+            except ValueError:
+                pass
+
+            device.metadata.update(metadata_updates)
+            device.last_seen = datetime.now(UTC)
+            payload = json.dumps(device.model_dump(mode="json"), ensure_ascii=False)
+            db.execute(
+                "UPDATE devices SET payload = ?, last_seen = ? WHERE stable_id = ?",
+                (payload, device.last_seen.isoformat(), stable_id),
+            )
+        return self.get(stable_id)
