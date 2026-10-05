@@ -20,5 +20,13 @@ class Settings(BaseSettings):
     def master_key_path(self) -> Path:
         return self.data_dir / "master.key"
 
+    @property
+    def mobile_private_key_path(self) -> Path:
+        return self.data_dir / "mobile_rsa_private.pem"
+
+    @property
+    def mobile_public_key_path(self) -> Path:
+        return self.data_dir / "mobile_rsa_public.pem"
+
 
 settings = Settings()
