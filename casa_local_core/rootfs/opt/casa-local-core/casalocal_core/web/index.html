@@ -191,7 +191,10 @@ const I18N = {
     ingressNeeded:'Para cadastrar credenciais com segurança, abra o Casa Local Hub pelo botão “Abrir interface web” dentro do Home Assistant.',
     saved:'Alterações salvas.', keyOk:'Chave validada. Este dispositivo está pronto para controle local.',
     keyFail:'Não foi possível validar a chave. Confira a local_key e tente novamente.',
-    partial:'Alguns módulos de descoberta não responderam nesta busca.'
+    partial:'Alguns módulos de descoberta não responderam nesta busca.',
+    turnOn:'Ligar', turnOff:'Desligar', refreshState:'Atualizar estado', refreshing:'Atualizando…',
+    stateOn:'Ligado', stateOff:'Desligado', stateUnknown:'Estado desconhecido',
+    commandFailed:'Não foi possível enviar o comando local.'
   },
   en: {
     kicker:'LOCAL AUTOMATION', headline:'Your home, simple and under your control.',
@@ -212,7 +215,10 @@ const I18N = {
     ingressNeeded:'To add credentials securely, open Casa Local Hub with “Open Web UI” inside Home Assistant.',
     saved:'Changes saved.', keyOk:'Key validated. This device is ready for local control.',
     keyFail:'The key could not be validated. Check the local_key and try again.',
-    partial:'Some discovery modules did not respond during this scan.'
+    partial:'Some discovery modules did not respond during this scan.',
+    turnOn:'Turn on', turnOff:'Turn off', refreshState:'Refresh state', refreshing:'Refreshing…',
+    stateOn:'On', stateOff:'Off', stateUnknown:'Unknown state',
+    commandFailed:'The local command could not be sent.'
   },
   es: {
     kicker:'AUTOMATIZACIÓN LOCAL', headline:'Tu casa, simple y bajo tu control.',
@@ -233,7 +239,10 @@ const I18N = {
     ingressNeeded:'Para agregar credenciales de forma segura, abre Casa Local Hub con “Abrir interfaz web” dentro de Home Assistant.',
     saved:'Cambios guardados.', keyOk:'Clave validada. Este dispositivo está listo para control local.',
     keyFail:'No se pudo validar la clave. Revisa la local_key e inténtalo de nuevo.',
-    partial:'Algunos módulos de descubrimiento no respondieron en esta búsqueda.'
+    partial:'Algunos módulos de descubrimiento no respondieron en esta búsqueda.',
+    turnOn:'Encender', turnOff:'Apagar', refreshState:'Actualizar estado', refreshing:'Actualizando…',
+    stateOn:'Encendido', stateOff:'Apagado', stateUnknown:'Estado desconocido',
+    commandFailed:'No se pudo enviar el comando local.'
   }
 };
 
@@ -298,6 +307,15 @@ function render(){
   grid.innerHTML=visible.map(d=>{
     const [badge,badgeClass]=cap(d);
     const canPrepare=(d.protocol||'').startsWith('tuya') && d.capability==='credentials_required';
+    const profile=(d.metadata&&d.metadata.tuya_profile)||{};
+    const lastDps=(d.metadata&&d.metadata.last_dps)||{};
+    const switchDps=profile.primary_switch_dps ? String(profile.primary_switch_dps) : null;
+    const hasTuyaControl=IS_INGRESS && (d.protocol||'').startsWith('tuya') &&
+      d.capability==='local_control_ready' && switchDps &&
+      Array.isArray(profile.boolean_dps) && profile.boolean_dps.map(String).includes(switchDps);
+    const currentSwitch=hasTuyaControl ? lastDps[switchDps] : undefined;
+    const stateText=currentSwitch===true?t('stateOn'):currentSwitch===false?t('stateOff'):t('stateUnknown');
+    const nextValue=currentSwitch===true ? false : true;
     return `
       <article class="card">
         <div class="card-head">
@@ -313,7 +331,10 @@ function render(){
         <div class="card-actions">
           <button class="secondary" onclick='openEdit(${JSON.stringify(d.stable_id)})'>${esc(t('organize'))}</button>
           ${canPrepare ? `<button class="secondary" onclick='openKey(${JSON.stringify(d.stable_id)})'>${esc(t('prepare'))}</button>` : ''}
+          ${hasTuyaControl ? `<button class="secondary" onclick='toggleTuya(${JSON.stringify(d.stable_id)},${JSON.stringify(switchDps)},${nextValue})'>${esc(currentSwitch===true?t('turnOff'):t('turnOn'))}</button>` : ''}
+          ${hasTuyaControl ? `<button class="secondary" onclick='refreshTuya(${JSON.stringify(d.stable_id)})'>${esc(t('refreshState'))}</button>` : ''}
         </div>
+        ${hasTuyaControl ? `<div class="device-sub" style="margin-top:12px">${esc(stateText)}</div>` : ''}
         <details>
           <summary>${esc(t('details'))}</summary>
           <dl>
@@ -371,6 +392,35 @@ async function saveDevice(){
     method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
   });
   if(response.ok){editDialog.close();await loadDevices();}
+}
+
+async function refreshTuya(id){
+  notice.className='notice'; notice.textContent=t('refreshing'); notice.className='notice show';
+  try{
+    const response=await fetch('api/v1/devices/'+encodeURIComponent(id)+'/tuya/state',{cache:'no-store'});
+    const data=await response.json();
+    if(!response.ok) throw new Error(data.detail||t('commandFailed'));
+    await loadDevices();
+    notice.className='notice';
+  }catch(e){
+    notice.textContent=t('commandFailed'); notice.className='notice show';
+  }
+}
+
+async function toggleTuya(id,dps,value){
+  notice.className='notice'; notice.textContent='';
+  try{
+    const response=await fetch('api/v1/devices/'+encodeURIComponent(id)+'/tuya/control',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({dps,value})
+    });
+    const data=await response.json();
+    if(!response.ok) throw new Error(data.detail||t('commandFailed'));
+    await loadDevices();
+  }catch(e){
+    notice.textContent=t('commandFailed'); notice.className='notice show';
+  }
 }
 
 function openKey(id){
