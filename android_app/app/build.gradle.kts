@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.casalocal.hub"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.casalocal.hub"
