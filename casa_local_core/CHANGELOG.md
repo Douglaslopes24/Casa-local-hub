@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0
+
+- Pareamento seguro entre Casa Local Core e integração Home Assistant.
+- Código temporário de 8 dígitos, válido por 5 minutos.
+- Tokens persistidos apenas como hash no Core.
+- Integração `casa_local_hub` com config flow pela interface.
+- Entidades Tuya `switch` e `light` para dispositivos Local pronto.
+- Atualização coordenada de estado local a cada 20 segundos.
+- Criação dinâmica de novas entidades compatíveis.
+- Traduções Português (Brasil), English e Español.
+- Estrutura pronta para instalação como repositório personalizado no HACS.
+
 ## 0.3.0
 
 - Leitura local de estado Tuya após validação da chave.
