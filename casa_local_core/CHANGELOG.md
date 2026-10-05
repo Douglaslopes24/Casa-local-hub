@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0
+
+- Leitura local de estado Tuya após validação da chave.
+- Análise segura dos DPS sem enviar comandos durante a identificação.
+- Identificação provável de interruptores/tomadas e lâmpadas.
+- Controle explícito Ligar/Desligar para DPS booleanos validados.
+- Atualização manual de estado pelo painel.
+- Persistência do perfil Tuya e último estado conhecido.
+- Testes automatizados para classificação de DPS.
+
 ## 0.2.0
 
 - Novo painel visual responsivo.
