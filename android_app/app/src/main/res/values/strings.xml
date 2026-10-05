@@ -1,0 +1,57 @@
+<resources>
+    <string name="app_name">Casa Local Hub</string>
+    <string name="tagline">Sua casa. Seu controle. Local.</string>
+    <string name="hub_title">1. Encontrar seu Hub</string>
+    <string name="hub_copy">O aplicativo procura o Casa Local Core na sua rede. Você também pode informar o endereço manualmente.</string>
+    <string name="core_url_hint">http://homeassistant.local:8799</string>
+    <string name="find_hub">Encontrar automaticamente</string>
+    <string name="connect">Conectar</string>
+    <string name="not_connected">Hub não conectado</string>
+    <string name="connected">Casa Local Core conectado</string>
+    <string name="pair_title">2. Parear o aplicativo</string>
+    <string name="pair_copy">No painel do Casa Local Hub, toque em “Conectar aplicativo” e informe aqui o código temporário.</string>
+    <string name="pairing_code">Código de 8 dígitos</string>
+    <string name="pair">Parear aplicativo</string>
+    <string name="paired">Aplicativo pareado com segurança</string>
+    <string name="tuya_title">3. Obter chaves Tuya / Smart Life</string>
+    <string name="tuya_copy">As credenciais são criptografadas no celular. O Core consulta a Tuya, guarda as local_key no cofre e não mostra as chaves na tela.</string>
+    <string name="access_id">Access ID / Client ID</string>
+    <string name="access_secret">Access Secret / Client Secret</string>
+    <string name="region">Região / Data Center</string>
+    <string name="sample_device_id">Device ID de um aparelho</string>
+    <string name="sync_keys">Buscar e vincular chaves</string>
+    <string name="devices_title">4. Validar dispositivos</string>
+    <string name="devices_copy">Depois da comunicação validada, faça um teste de controle em cada aparelho antes de integrá-lo ao Home Assistant.</string>
+    <string name="refresh_devices">Atualizar dispositivos</string>
+    <string name="no_devices">Nenhum dispositivo carregado.</string>
+    <string name="discovered">Encontrado</string>
+    <string name="credentials_required">Chave local necessária</string>
+    <string name="communication_validated">Comunicação validada</string>
+    <string name="device_validated">Dispositivo validado</string>
+    <string name="test_on">Testar ligar</string>
+    <string name="test_off">Testar desligar</string>
+    <string name="turn_on">Ligar</string>
+    <string name="turn_off">Desligar</string>
+    <string name="technical_details">Detalhes</string>
+    <string name="status_working">Processando…</string>
+    <string name="hub_found">Hub encontrado automaticamente.</string>
+    <string name="hub_not_found">Não encontrei o Hub automaticamente. Informe o endereço manualmente.</string>
+    <string name="connect_failed">Não foi possível conectar ao Core.</string>
+    <string name="pair_failed">Código inválido, expirado ou Core indisponível.</string>
+    <string name="cloud_sync_failed">Não foi possível consultar a Tuya. Confira credenciais, região e vínculo do projeto.</string>
+    <string name="keys_summary">Encontrados: %1$d · vinculados: %2$d · comunicação validada: %3$d</string>
+    <string name="control_failed">O dispositivo não confirmou o comando local.</string>
+    <string name="control_validated">Controle local confirmado. Dispositivo pronto para integrar.</string>
+    <string name="enter_all_fields">Preencha todos os campos.</string>
+    <string name="enter_pair_code">Informe o código de pareamento.</string>
+    <string name="pair_first">Pareie o aplicativo com o Core primeiro.</string>
+    <string-array name="tuya_regions">
+        <item>us</item>
+        <item>us-e</item>
+        <item>eu</item>
+        <item>eu-w</item>
+        <item>sg</item>
+        <item>in</item>
+        <item>cn</item>
+    </string-array>
+</resources>
