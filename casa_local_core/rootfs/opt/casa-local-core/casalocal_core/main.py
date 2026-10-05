@@ -227,7 +227,14 @@ app = FastAPI(
 
 @app.get("/", response_class=HTMLResponse)
 async def root() -> HTMLResponse:
-    return HTMLResponse(DASHBOARD_HTML.replace("__VERSION__", settings.version))
+    return HTMLResponse(
+        DASHBOARD_HTML.replace("__VERSION__", settings.version),
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 
 @app.get("/health")
