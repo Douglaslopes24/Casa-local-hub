@@ -12,8 +12,11 @@ from .entity import CasaLocalEntity
 
 
 def _is_light(device: dict[str, Any]) -> bool:
+    validation = (device.get("metadata") or {}).get("validation") or {}
     return (
         device.get("capability") == "local_control_ready"
+        and validation.get("integratable") is True
+        and validation.get("control") == "passed"
         and device.get("kind") == "light"
         and str(device.get("protocol") or "").startswith("tuya")
     )
