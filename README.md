@@ -4,7 +4,7 @@
 
 Casa Local Hub é uma plataforma local-first para descobrir, organizar e preparar dispositivos de automação residencial para uso local com Home Assistant.
 
-> **v0.2.0 — experimental.** Use apenas em uma rede local confiável.
+> **v0.3.0 — experimental.** Use apenas em uma rede local confiável.
 
 ## Instalação
 
@@ -44,7 +44,14 @@ Descobrir um dispositivo não significa afirmar compatibilidade. O Casa Local Hu
 
 ## Roadmap
 
-- **v0.2.x:** painel, persistência, Ingress e cofre local.
-- **v0.3:** identificação de DPS e controle local Tuya.
+- **v0.3.x:** identificação de DPS e controle local Tuya.
 - **v0.4:** integração Home Assistant com entidades.
 - **v0.5:** aplicativo Android e provisionamento guiado.
+- **v0.5:** aplicativo Android e provisionamento guiado.
+
+
+## Controle Tuya
+
+Depois que uma `local_key` é validada, o Core lê o status do aparelho, analisa os DPS sem enviar comandos e identifica controles booleanos prováveis. A interface só envia um comando quando o usuário toca explicitamente em **Ligar** ou **Desligar**.
+
+O estado pode ser atualizado manualmente pelo painel. DPS não identificados como booleanos não são alterados automaticamente.
