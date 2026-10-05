@@ -11,6 +11,7 @@ from fastapi.responses import HTMLResponse
 from casalocal_core.config import settings
 from casalocal_core.models.device import LocalCapability
 from casalocal_core.services.discovery import DiscoveryManager
+from casalocal_core.services.advertisement import HubAdvertisement
 from casalocal_core.services.registry import DeviceRegistry
 from casalocal_core.services.pairing import PairingError, PairingService
 from casalocal_core.services.mobile_crypto import MobileCrypto, MobileCryptoError
@@ -103,7 +104,12 @@ async def lifespan(app: FastAPI):
         app.state.vault,
         app.state.tuya,
     )
-    yield
+    app.state.advertisement = HubAdvertisement(settings.port, settings.version)
+    app.state.advertisement.start()
+    try:
+        yield
+    finally:
+        app.state.advertisement.close()
 
 
 app = FastAPI(
