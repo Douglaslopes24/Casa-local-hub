@@ -1,0 +1,51 @@
+<resources>
+    <string name="app_name">Casa Local Hub</string>
+    <string name="tagline">Your home. Your control. Local.</string>
+    <string name="hub_title">1. Find your Hub</string>
+    <string name="hub_copy">The app searches for Casa Local Core on your network. You can also enter the address manually.</string>
+    <string name="core_url_hint">http://homeassistant.local:8799</string>
+    <string name="find_hub">Find automatically</string>
+    <string name="connect">Connect</string>
+    <string name="not_connected">Hub not connected</string>
+    <string name="connected">Casa Local Core connected</string>
+    <string name="pair_title">2. Pair the app</string>
+    <string name="pair_copy">In the Casa Local Hub panel, choose “Connect app” and enter the temporary code here.</string>
+    <string name="pairing_code">8-digit code</string>
+    <string name="pair">Pair app</string>
+    <string name="paired">App paired securely</string>
+    <string name="tuya_title">3. Get Tuya / Smart Life keys</string>
+    <string name="tuya_copy">Credentials are encrypted on the phone. Core queries Tuya, stores local keys in the vault and never displays them.</string>
+    <string name="access_id">Access ID / Client ID</string>
+    <string name="access_secret">Access Secret / Client Secret</string>
+    <string name="region">Region / Data Center</string>
+    <string name="sample_device_id">Device ID from one device</string>
+    <string name="sync_keys">Find and link keys</string>
+    <string name="devices_title">4. Validate devices</string>
+    <string name="devices_copy">After local communication is validated, run a control test on each device before integrating it with Home Assistant.</string>
+    <string name="refresh_devices">Refresh devices</string>
+    <string name="no_devices">No devices loaded.</string>
+    <string name="discovered">Discovered</string>
+    <string name="credentials_required">Local key required</string>
+    <string name="communication_validated">Communication validated</string>
+    <string name="device_validated">Device validated</string>
+    <string name="test_on">Test turn on</string>
+    <string name="test_off">Test turn off</string>
+    <string name="turn_on">Turn on</string>
+    <string name="turn_off">Turn off</string>
+    <string name="technical_details">Details</string>
+    <string name="status_working">Working…</string>
+    <string name="hub_found">Hub found automatically.</string>
+    <string name="hub_not_found">Hub was not found automatically. Enter its address manually.</string>
+    <string name="connect_failed">Could not connect to Core.</string>
+    <string name="pair_failed">Invalid or expired code, or Core is unavailable.</string>
+    <string name="cloud_sync_failed">Could not query Tuya. Check credentials, region and project linkage.</string>
+    <string name="keys_summary">Found: %1$d · linked: %2$d · communication validated: %3$d</string>
+    <string name="control_failed">The device did not confirm the local command.</string>
+    <string name="control_validated">Local control confirmed. Device is ready to integrate.</string>
+    <string name="enter_all_fields">Fill in all fields.</string>
+    <string name="enter_pair_code">Enter the pairing code.</string>
+    <string name="pair_first">Pair the app with Core first.</string>
+    <string-array name="tuya_regions">
+        <item>us</item><item>us-e</item><item>eu</item><item>eu-w</item><item>sg</item><item>in</item><item>cn</item>
+    </string-array>
+</resources>
