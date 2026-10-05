@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0d10">
+  <title>Casa Local Hub</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#090b0e; --surface:#11151a; --surface2:#171c22; --line:#252c35;
+      --text:#f5f7fa; --muted:#9ba6b2; --soft:#cbd4df; --ok:#77dfa8;
+      --warn:#ffd17a; --danger:#ff9d9d; --accent:#e8eef7; --accentText:#111722;
+      --shadow:0 24px 70px rgba(0,0,0,.28);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:
+      radial-gradient(circle at 85% -10%,rgba(117,153,208,.14),transparent 32rem),
+      radial-gradient(circle at -10% 95%,rgba(85,183,148,.09),transparent 30rem),
+      var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .shell{width:min(1120px,calc(100% - 28px));margin:auto;padding:34px 0 72px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:26px}
+    .brand{display:flex;align-items:center;gap:13px}
+    .brandmark{width:42px;height:42px;border-radius:14px;background:linear-gradient(145deg,#f4f7fb,#aebdce);
+      display:grid;place-items:center;color:#0c1117;font-weight:800;box-shadow:0 10px 30px rgba(164,187,215,.18)}
+    .brandname{font-size:18px;font-weight:720;letter-spacing:-.02em}
+    .version{font-size:12px;color:var(--muted);margin-top:2px}
+    .tools{display:flex;gap:9px;align-items:center}
+    .select,.search{border:1px solid var(--line);background:rgba(17,21,26,.78);color:var(--text);border-radius:13px;padding:10px 12px;outline:none}
+    .select:focus,.search:focus{border-color:#516173}
+    .hero{border:1px solid var(--line);border-radius:26px;background:linear-gradient(145deg,rgba(23,28,34,.93),rgba(14,18,23,.93));
+      padding:27px;box-shadow:var(--shadow);display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
+    .kicker{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:10px}
+    h1{font-size:clamp(29px,5vw,47px);line-height:1.02;letter-spacing:-.045em;margin:0;font-weight:690}
+    .hero p{max-width:670px;margin:13px 0 0;color:var(--muted);line-height:1.55;font-size:15px}
+    .primary{border:0;border-radius:15px;background:var(--accent);color:var(--accentText);padding:14px 19px;font-weight:720;min-width:180px}
+    .primary:hover{filter:brightness(1.05);transform:translateY(-1px)}
+    .primary:disabled{opacity:.65;cursor:wait;transform:none}
+    .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+    .metric{border:1px solid var(--line);border-radius:18px;background:rgba(17,21,26,.7);padding:16px}
+    .metric strong{display:block;font-size:26px;letter-spacing:-.04em}
+    .metric span{font-size:12px;color:var(--muted)}
+    .toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:22px 0 14px}
+    .toolbar-left{display:flex;gap:8px;align-items:center;flex:1}
+    .search{width:min(360px,100%)}
+    .chips{display:flex;gap:7px;overflow:auto;padding-bottom:2px}
+    .chip{border:1px solid var(--line);background:transparent;color:var(--muted);padding:9px 12px;border-radius:999px;white-space:nowrap}
+    .chip.active{background:var(--surface2);color:var(--text)}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .card{border:1px solid var(--line);border-radius:22px;background:rgba(17,21,26,.82);padding:19px;transition:.18s ease}
+    .card:hover{border-color:#35414e;transform:translateY(-1px)}
+    .card-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+    .device{display:flex;gap:13px;min-width:0}
+    .device-icon{width:42px;height:42px;border-radius:13px;background:var(--surface2);display:grid;place-items:center;color:var(--soft);font-weight:800}
+    .device-title{font-weight:690;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:270px}
+    .device-sub{font-size:12px;color:var(--muted);margin-top:4px}
+    .badge{border:1px solid var(--line);border-radius:999px;padding:6px 9px;font-size:11px;white-space:nowrap;color:var(--soft)}
+    .badge.ok{color:var(--ok)} .badge.warn{color:var(--warn)}
+    .card-actions{display:flex;gap:8px;margin-top:18px}
+    .secondary{border:1px solid var(--line);border-radius:12px;background:var(--surface2);color:var(--text);padding:10px 12px;font-weight:620}
+    .secondary:hover{border-color:#3c4856}
+    details{margin-top:15px;border-top:1px solid var(--line);padding-top:12px}
+    summary{cursor:pointer;color:var(--muted);font-size:12px}
+    dl{display:grid;grid-template-columns:92px 1fr;gap:8px 12px;font-size:12px;margin:13px 0 0}
+    dt{color:var(--muted)} dd{margin:0;overflow-wrap:anywhere;color:var(--soft)}
+    .empty{grid-column:1/-1;border:1px dashed var(--line);border-radius:22px;padding:46px 22px;text-align:center;color:var(--muted)}
+    .notice{display:none;margin:14px 0 0;padding:12px 14px;border:1px solid rgba(255,209,122,.2);background:rgba(255,209,122,.06);
+      border-radius:14px;color:var(--warn);font-size:12px}
+    .notice.show{display:block}
+    dialog{border:1px solid var(--line);border-radius:22px;background:#11161c;color:var(--text);padding:0;width:min(520px,calc(100% - 28px));box-shadow:var(--shadow)}
+    dialog::backdrop{background:rgba(0,0,0,.66);backdrop-filter:blur(3px)}
+    .modal{padding:23px}
+    .modal h2{margin:0 0 7px;font-size:22px;letter-spacing:-.03em}
+    .modal p{margin:0 0 20px;color:var(--muted);font-size:13px;line-height:1.5}
+    label{display:block;color:var(--muted);font-size:12px;margin:14px 0 7px}
+    .field{width:100%;border:1px solid var(--line);background:#0d1116;color:var(--text);border-radius:13px;padding:12px;outline:none}
+    .field:focus{border-color:#516173}
+    .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:22px}
+    .ghost{border:0;background:transparent;color:var(--muted);padding:10px 12px}
+    footer{text-align:center;color:#687482;font-size:11px;margin-top:34px}
+    @media(max-width:760px){
+      .hero{grid-template-columns:1fr}.hero .primary{width:100%}
+      .metrics{grid-template-columns:1fr 1fr}.metrics .metric:last-child{grid-column:1/-1}
+      .toolbar{align-items:stretch;flex-direction:column}.toolbar-left{width:100%}.search{width:100%}
+      .grid{grid-template-columns:1fr}.topbar{align-items:flex-start}.tools{flex-direction:column;align-items:stretch}
+      .device-title{max-width:180px}
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brandmark">CL</div>
+      <div><div class="brandname">Casa Local Hub</div><div class="version">Core v__VERSION__</div></div>
+    </div>
+    <div class="tools">
+      <select id="language" class="select" aria-label="Idioma">
+        <option value="pt-BR">Português (Brasil)</option>
+        <option value="en">English</option>
+        <option value="es">Español</option>
+      </select>
+    </div>
+  </div>
+
+  <section class="hero">
+    <div>
+      <div class="kicker" data-i18n="kicker">AUTOMAÇÃO LOCAL</div>
+      <h1 data-i18n="headline">Sua casa, simples e sob seu controle.</h1>
+      <p data-i18n="intro">Encontre dispositivos da sua rede e prepare o controle local sem depender da Internet.</p>
+    </div>
+    <button class="primary" id="scanBtn" onclick="scan()" data-i18n="scan">Buscar dispositivos</button>
+  </section>
+
+  <div id="notice" class="notice"></div>
+
+  <section class="metrics">
+    <div class="metric"><strong id="totalCount">0</strong><span data-i18n="devices">Dispositivos</span></div>
+    <div class="metric"><strong id="readyCount">0</strong><span data-i18n="ready">Locais prontos</span></div>
+    <div class="metric"><strong id="attentionCount">0</strong><span data-i18n="attention">Precisam de atenção</span></div>
+  </section>
+
+  <div class="toolbar">
+    <div class="toolbar-left"><input id="search" class="search" data-i18n-placeholder="search" placeholder="Buscar dispositivo ou ambiente"></div>
+    <div class="chips">
+      <button class="chip active" data-filter="all" data-i18n="all">Todos</button>
+      <button class="chip" data-filter="ready" data-i18n="readyShort">Prontos</button>
+      <button class="chip" data-filter="attention" data-i18n="attentionShort">Atenção</button>
+      <button class="chip" data-filter="camera" data-i18n="cameras">Câmeras</button>
+    </div>
+  </div>
+
+  <section id="devicesGrid" class="grid"></section>
+  <footer data-i18n="footer">Processamento local · suas credenciais ficam no seu Home Assistant</footer>
+</div>
+
+<dialog id="editDialog">
+  <form method="dialog" class="modal" id="editForm">
+    <h2 data-i18n="editTitle">Organizar dispositivo</h2>
+    <p data-i18n="editCopy">Dê um nome simples e escolha o ambiente. Isso fica salvo localmente.</p>
+    <input type="hidden" id="editId">
+    <label for="friendlyName" data-i18n="name">Nome</label>
+    <input class="field" id="friendlyName" maxlength="80">
+    <label for="area" data-i18n="area">Ambiente</label>
+    <input class="field" id="area" maxlength="80" data-i18n-placeholder="areaExample" placeholder="Ex.: Sala">
+    <div class="modal-actions">
+      <button type="button" class="ghost" onclick="editDialog.close()" data-i18n="cancel">Cancelar</button>
+      <button type="button" class="secondary" onclick="saveDevice()" data-i18n="save">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="keyDialog">
+  <form method="dialog" class="modal">
+    <h2 data-i18n="keyTitle">Preparar controle local</h2>
+    <p id="keyHelp" data-i18n="keyCopy">A chave será validada diretamente com o aparelho e armazenada criptografada no Home Assistant.</p>
+    <input type="hidden" id="keyId">
+    <label for="localKey" data-i18n="localKey">Local key</label>
+    <input class="field" id="localKey" type="password" autocomplete="off" spellcheck="false">
+    <div class="modal-actions">
+      <button type="button" class="ghost" onclick="keyDialog.close()" data-i18n="cancel">Cancelar</button>
+      <button type="button" class="secondary" onclick="validateKey()" data-i18n="validate">Validar com o dispositivo</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const IS_INGRESS = __INGRESS__;
+let devices = [];
+let filter = 'all';
+
+const I18N = {
+  'pt-BR': {
+    kicker:'AUTOMAÇÃO LOCAL', headline:'Sua casa, simples e sob seu controle.',
+    intro:'Encontre dispositivos da sua rede e prepare o controle local sem depender da Internet.',
+    scan:'Buscar dispositivos', scanning:'Buscando…', scanAgain:'Buscar novamente',
+    devices:'Dispositivos', ready:'Locais prontos', attention:'Precisam de atenção',
+    search:'Buscar dispositivo ou ambiente', all:'Todos', readyShort:'Prontos',
+    attentionShort:'Atenção', cameras:'Câmeras', footer:'Processamento local · suas credenciais ficam no seu Home Assistant',
+    empty:'Nenhum dispositivo encontrado ainda.', noMatch:'Nenhum dispositivo corresponde a este filtro.',
+    unknownDevice:'Dispositivo local', camera:'Câmera local', unknownVendor:'Fabricante não identificado',
+    credentials:'Chave local necessária', localReady:'Local pronto', localPossible:'Controle local possível', discovered:'Encontrado',
+    organize:'Organizar', prepare:'Preparar local', details:'Detalhes técnicos', protocol:'Protocolo',
+    address:'Endereço', port:'Porta', type:'Tipo', areaLabel:'Ambiente',
+    editTitle:'Organizar dispositivo', editCopy:'Dê um nome simples e escolha o ambiente. Isso fica salvo localmente.',
+    name:'Nome', area:'Ambiente', areaExample:'Ex.: Sala', cancel:'Cancelar', save:'Salvar',
+    keyTitle:'Preparar controle local', keyCopy:'A chave será validada diretamente com o aparelho e armazenada criptografada no Home Assistant.',
+    localKey:'Chave local (local_key)', validate:'Validar com o dispositivo',
+    ingressNeeded:'Para cadastrar credenciais com segurança, abra o Casa Local Hub pelo botão “Abrir interface web” dentro do Home Assistant.',
+    saved:'Alterações salvas.', keyOk:'Chave validada. Este dispositivo está pronto para controle local.',
+    keyFail:'Não foi possível validar a chave. Confira a local_key e tente novamente.',
+    partial:'Alguns módulos de descoberta não responderam nesta busca.'
+  },
+  en: {
+    kicker:'LOCAL AUTOMATION', headline:'Your home, simple and under your control.',
+    intro:'Find devices on your network and prepare local control without depending on the Internet.',
+    scan:'Find devices', scanning:'Searching…', scanAgain:'Search again',
+    devices:'Devices', ready:'Local ready', attention:'Need attention',
+    search:'Search device or room', all:'All', readyShort:'Ready',
+    attentionShort:'Attention', cameras:'Cameras', footer:'Local processing · credentials stay in your Home Assistant',
+    empty:'No devices found yet.', noMatch:'No devices match this filter.',
+    unknownDevice:'Local device', camera:'Local camera', unknownVendor:'Unknown manufacturer',
+    credentials:'Local key required', localReady:'Local ready', localPossible:'Local control possible', discovered:'Discovered',
+    organize:'Organize', prepare:'Set up local', details:'Technical details', protocol:'Protocol',
+    address:'Address', port:'Port', type:'Type', areaLabel:'Room',
+    editTitle:'Organize device', editCopy:'Give it a simple name and choose a room. This is stored locally.',
+    name:'Name', area:'Room', areaExample:'E.g. Living room', cancel:'Cancel', save:'Save',
+    keyTitle:'Set up local control', keyCopy:'The key is validated directly with the device and stored encrypted in Home Assistant.',
+    localKey:'Local key', validate:'Validate with device',
+    ingressNeeded:'To add credentials securely, open Casa Local Hub with “Open Web UI” inside Home Assistant.',
+    saved:'Changes saved.', keyOk:'Key validated. This device is ready for local control.',
+    keyFail:'The key could not be validated. Check the local_key and try again.',
+    partial:'Some discovery modules did not respond during this scan.'
+  },
+  es: {
+    kicker:'AUTOMATIZACIÓN LOCAL', headline:'Tu casa, simple y bajo tu control.',
+    intro:'Encuentra dispositivos de tu red y prepara el control local sin depender de Internet.',
+    scan:'Buscar dispositivos', scanning:'Buscando…', scanAgain:'Buscar de nuevo',
+    devices:'Dispositivos', ready:'Locales listos', attention:'Requieren atención',
+    search:'Buscar dispositivo o ambiente', all:'Todos', readyShort:'Listos',
+    attentionShort:'Atención', cameras:'Cámaras', footer:'Procesamiento local · tus credenciales permanecen en Home Assistant',
+    empty:'Todavía no se encontraron dispositivos.', noMatch:'Ningún dispositivo coincide con este filtro.',
+    unknownDevice:'Dispositivo local', camera:'Cámara local', unknownVendor:'Fabricante no identificado',
+    credentials:'Se requiere clave local', localReady:'Local listo', localPossible:'Control local posible', discovered:'Encontrado',
+    organize:'Organizar', prepare:'Preparar local', details:'Detalles técnicos', protocol:'Protocolo',
+    address:'Dirección', port:'Puerto', type:'Tipo', areaLabel:'Ambiente',
+    editTitle:'Organizar dispositivo', editCopy:'Dale un nombre simple y elige un ambiente. Se guarda localmente.',
+    name:'Nombre', area:'Ambiente', areaExample:'Ej.: Sala', cancel:'Cancelar', save:'Guardar',
+    keyTitle:'Preparar control local', keyCopy:'La clave se valida directamente con el dispositivo y se guarda cifrada en Home Assistant.',
+    localKey:'Clave local (local_key)', validate:'Validar con el dispositivo',
+    ingressNeeded:'Para agregar credenciales de forma segura, abre Casa Local Hub con “Abrir interfaz web” dentro de Home Assistant.',
+    saved:'Cambios guardados.', keyOk:'Clave validada. Este dispositivo está listo para control local.',
+    keyFail:'No se pudo validar la clave. Revisa la local_key e inténtalo de nuevo.',
+    partial:'Algunos módulos de descubrimiento no respondieron en esta búsqueda.'
+  }
+};
+
+const languageEl=document.getElementById('language');
+const grid=document.getElementById('devicesGrid');
+const searchEl=document.getElementById('search');
+const notice=document.getElementById('notice');
+const scanBtn=document.getElementById('scanBtn');
+const editDialog=document.getElementById('editDialog');
+const keyDialog=document.getElementById('keyDialog');
+
+function initialLanguage(){
+  const saved=localStorage.getItem('clh_language');
+  if(saved && I18N[saved]) return saved;
+  const browser=(navigator.language||'').toLowerCase();
+  if(browser.startsWith('es')) return 'es';
+  if(browser.startsWith('en')) return 'en';
+  return 'pt-BR';
+}
+let lang=initialLanguage();
+languageEl.value=lang;
+
+function t(key){ return I18N[lang][key] || I18N['pt-BR'][key] || key; }
+function applyLanguage(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll('[data-i18n]').forEach(node=>node.textContent=t(node.dataset.i18n));
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(node=>node.placeholder=t(node.dataset.i18nPlaceholder));
+  render();
+}
+languageEl.addEventListener('change',()=>{lang=languageEl.value;localStorage.setItem('clh_language',lang);applyLanguage();});
+
+function esc(value){ return String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function displayName(d){ return d.friendly_name || d.name || (d.kind==='camera'?t('camera'):t('unknownDevice')); }
+function cap(d){
+  if(d.capability==='local_control_ready') return [t('localReady'),'ok'];
+  if(d.capability==='credentials_required') return [t('credentials'),'warn'];
+  if(d.capability==='local_control_possible') return [t('localPossible'),'ok'];
+  return [t('discovered'),''];
+}
+function iconText(d){ if(d.kind==='camera') return 'CAM'; if((d.protocol||'').startsWith('tuya')) return 'TY'; if((d.protocol||'').includes('ewelink')) return 'SW'; return '•'; }
+
+function matches(d){
+  const q=searchEl.value.trim().toLowerCase();
+  const hay=[displayName(d),d.area,d.vendor,d.address,d.protocol].filter(Boolean).join(' ').toLowerCase();
+  if(q && !hay.includes(q)) return false;
+  if(filter==='ready' && d.capability!=='local_control_ready') return false;
+  if(filter==='attention' && d.capability==='local_control_ready') return false;
+  if(filter==='camera' && d.kind!=='camera') return false;
+  return true;
+}
+
+function render(){
+  const ready=devices.filter(d=>d.capability==='local_control_ready').length;
+  document.getElementById('totalCount').textContent=devices.length;
+  document.getElementById('readyCount').textContent=ready;
+  document.getElementById('attentionCount').textContent=devices.length-ready;
+
+  const visible=devices.filter(matches);
+  if(!devices.length){ grid.innerHTML='<div class="empty">'+esc(t('empty'))+'</div>'; return; }
+  if(!visible.length){ grid.innerHTML='<div class="empty">'+esc(t('noMatch'))+'</div>'; return; }
+
+  grid.innerHTML=visible.map(d=>{
+    const [badge,badgeClass]=cap(d);
+    const canPrepare=(d.protocol||'').startsWith('tuya') && d.capability==='credentials_required';
+    return `
+      <article class="card">
+        <div class="card-head">
+          <div class="device">
+            <div class="device-icon">${esc(iconText(d))}</div>
+            <div>
+              <div class="device-title">${esc(displayName(d))}</div>
+              <div class="device-sub">${esc(d.area || d.vendor || t('unknownVendor'))}</div>
+            </div>
+          </div>
+          <span class="badge ${badgeClass}">${esc(badge)}</span>
+        </div>
+        <div class="card-actions">
+          <button class="secondary" onclick='openEdit(${JSON.stringify(d.stable_id)})'>${esc(t('organize'))}</button>
+          ${canPrepare ? `<button class="secondary" onclick='openKey(${JSON.stringify(d.stable_id)})'>${esc(t('prepare'))}</button>` : ''}
+        </div>
+        <details>
+          <summary>${esc(t('details'))}</summary>
+          <dl>
+            <dt>${esc(t('protocol'))}</dt><dd>${esc(d.protocol||'—')}</dd>
+            <dt>${esc(t('address'))}</dt><dd>${esc(d.address||'—')}</dd>
+            <dt>${esc(t('port'))}</dt><dd>${esc(d.port||'—')}</dd>
+            <dt>${esc(t('type'))}</dt><dd>${esc(d.kind||'unknown')}</dd>
+          </dl>
+        </details>
+      </article>`;
+  }).join('');
+}
+
+async function loadDevices(){
+  try{
+    const response=await fetch('api/v1/devices',{cache:'no-store'});
+    const data=await response.json();
+    devices=data.devices||[];
+    render();
+  }catch(e){ grid.innerHTML='<div class="empty">'+esc(String(e))+'</div>'; }
+}
+
+async function scan(){
+  notice.className='notice';notice.textContent='';
+  scanBtn.disabled=true;scanBtn.textContent=t('scanning');
+  try{
+    const response=await fetch('api/v1/discovery',{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({timeout:6})
+    });
+    const data=await response.json();
+    await loadDevices();
+    if(data.errors && Object.keys(data.errors).length){
+      notice.textContent=t('partial')+' '+Object.keys(data.errors).join(', ');
+      notice.className='notice show';
+    }
+  }catch(e){
+    notice.textContent=String(e);notice.className='notice show';
+  }finally{
+    scanBtn.disabled=false;scanBtn.textContent=t('scanAgain');
+  }
+}
+
+function findDevice(id){ return devices.find(d=>d.stable_id===id); }
+function openEdit(id){
+  const d=findDevice(id);if(!d)return;
+  document.getElementById('editId').value=id;
+  document.getElementById('friendlyName').value=d.friendly_name||d.name||'';
+  document.getElementById('area').value=d.area||'';
+  editDialog.showModal();
+}
+async function saveDevice(){
+  const id=document.getElementById('editId').value;
+  const body={friendly_name:document.getElementById('friendlyName').value,area:document.getElementById('area').value};
+  const response=await fetch('api/v1/devices/'+encodeURIComponent(id),{
+    method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
+  });
+  if(response.ok){editDialog.close();await loadDevices();}
+}
+
+function openKey(id){
+  if(!IS_INGRESS){
+    notice.textContent=t('ingressNeeded');notice.className='notice show';return;
+  }
+  document.getElementById('keyId').value=id;
+  document.getElementById('localKey').value='';
+  keyDialog.showModal();
+}
+async function validateKey(){
+  const id=document.getElementById('keyId').value;
+  const local_key=document.getElementById('localKey').value.trim();
+  if(!local_key)return;
+  const button=keyDialog.querySelector('.secondary');
+  button.disabled=true;
+  try{
+    const response=await fetch('api/v1/devices/'+encodeURIComponent(id)+'/tuya/credentials',{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({local_key})
+    });
+    const data=await response.json();
+    if(!response.ok) throw new Error(data.detail||t('keyFail'));
+    keyDialog.close();
+    notice.textContent=t('keyOk');notice.className='notice show';
+    document.getElementById('localKey').value='';
+    await loadDevices();
+  }catch(e){
+    notice.textContent=t('keyFail');notice.className='notice show';
+  }finally{button.disabled=false;}
+}
+
+searchEl.addEventListener('input',render);
+document.querySelectorAll('.chip').forEach(chip=>chip.addEventListener('click',()=>{
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');filter=chip.dataset.filter;render();
+}));
+applyLanguage();
+loadDevices();
+</script>
+</body>
+</html>
