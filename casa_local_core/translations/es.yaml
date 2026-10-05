@@ -1,0 +1,4 @@
+configuration:
+  discovery_timeout:
+    name: "Tiempo de búsqueda"
+    description: "Tiempo máximo, en segundos, utilizado en cada búsqueda de dispositivos de la red local."
