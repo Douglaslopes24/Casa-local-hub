@@ -12,6 +12,7 @@ from casalocal_core.config import settings
 from casalocal_core.models.device import LocalCapability
 from casalocal_core.services.discovery import DiscoveryManager
 from casalocal_core.services.registry import DeviceRegistry
+from casalocal_core.services.pairing import PairingError, PairingService
 from casalocal_core.services.tuya_control import (
     TuyaControlError,
     TuyaController,
@@ -29,12 +30,30 @@ def is_ingress_request(request: Request) -> bool:
     return client_host == "172.30.32.2" and bool(request.headers.get("x-ingress-path"))
 
 
+def bearer_token(request: Request) -> str | None:
+    authorization = request.headers.get("authorization", "")
+    if not authorization.lower().startswith("bearer "):
+        return None
+    return authorization[7:].strip() or None
+
+
+def is_api_authenticated(request: Request) -> bool:
+    token = bearer_token(request)
+    return bool(token and app.state.pairing.validate_token(token))
+
+
 def require_ingress(request: Request) -> None:
     if not is_ingress_request(request):
         raise HTTPException(
             status_code=403,
             detail="This action is only available through Home Assistant Ingress.",
         )
+
+
+def require_ingress_or_api(request: Request) -> None:
+    if is_ingress_request(request) or is_api_authenticated(request):
+        return
+    raise HTTPException(status_code=401, detail="Authentication required")
 
 
 def persist_tuya_profile(stable_id: str, profile: dict) -> None:
@@ -71,6 +90,7 @@ async def lifespan(app: FastAPI):
     app.state.discovery = DiscoveryManager(registry)
     app.state.vault = LocalVault(settings.database_path, settings.master_key_path)
     app.state.tuya = TuyaController()
+    app.state.pairing = PairingService(settings.database_path)
     yield
 
 
@@ -110,6 +130,35 @@ async def status() -> dict:
         "known_devices": len(app.state.registry.all()),
         "adapters": list(app.state.discovery.adapters.keys()),
         "vault": "ready",
+    }
+
+
+@app.post("/api/v1/pairing/start")
+async def start_pairing(request: Request) -> dict:
+    require_ingress(request)
+    return app.state.pairing.start()
+
+
+@app.post("/api/v1/pairing/complete")
+async def complete_pairing(payload: dict) -> dict:
+    code = str(payload.get("code") or "").strip()
+    label = str(payload.get("label") or "Home Assistant").strip()
+    if len(code) != 8 or not code.isdigit():
+        raise HTTPException(status_code=400, detail="Invalid pairing code format")
+    try:
+        token = app.state.pairing.complete(code, label=label)
+    except PairingError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+    return {"token": token, "token_type": "bearer"}
+
+
+@app.get("/api/v1/integration/devices")
+async def integration_devices(request: Request) -> dict:
+    require_ingress_or_api(request)
+    known = app.state.registry.all()
+    return {
+        "count": len(known),
+        "devices": [device.model_dump(mode="json") for device in known],
     }
 
 
@@ -201,7 +250,7 @@ async def set_tuya_credentials(stable_id: str, payload: dict, request: Request) 
 
 @app.get("/api/v1/devices/{stable_id}/tuya/state")
 async def get_tuya_state(stable_id: str, request: Request) -> dict:
-    require_ingress(request)
+    require_ingress_or_api(request)
     device, local_key = get_ready_tuya(stable_id)
 
     try:
@@ -220,7 +269,7 @@ async def get_tuya_state(stable_id: str, request: Request) -> dict:
 
 @app.post("/api/v1/devices/{stable_id}/tuya/control")
 async def control_tuya(stable_id: str, payload: dict, request: Request) -> dict:
-    require_ingress(request)
+    require_ingress_or_api(request)
     device, local_key = get_ready_tuya(stable_id)
 
     profile = device.metadata.get("tuya_profile")
