@@ -16,12 +16,25 @@ jobs:
         with:
           python-version: "3.13"
       - name: Compile Python sources
-        run: python -m compileall -q casa_local_core/rootfs/opt/casa-local-core/casalocal_core
+        run: |
+          python -m compileall -q casa_local_core/rootfs/opt/casa-local-core/casalocal_core
+          python -m compileall -q custom_components/casa_local_hub
+      - name: Validate JSON files
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for path in Path(".").rglob("*.json"):
+              json.loads(path.read_text(encoding="utf-8"))
+              print(path)
+          PY
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
-      - name: Check required app files
+      - name: Check required files
         run: |
           test -f repository.yaml
           test -f casa_local_core/config.yaml
           test -f casa_local_core/Dockerfile
           test -f casa_local_core/rootfs/opt/casa-local-core/casalocal_core/web/index.html
+          test -f custom_components/casa_local_hub/manifest.json
+          test -f custom_components/casa_local_hub/config_flow.py
