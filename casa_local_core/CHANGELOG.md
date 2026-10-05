@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0
+
+- Suporte ao Casa Local Hub App para Android.
+- Anúncio mDNS `_casalocal._tcp` para descoberta automática do Core.
+- Pareamento específico do aplicativo antes da validação dos dispositivos.
+- Endpoint autenticado para o aplicativo listar todos os dispositivos.
+- Chave RSA própria do Core persistida em `/data`.
+- Credenciais Tuya enviadas pelo celular com RSA-OAEP + AES-256-GCM.
+- Access ID e Access Secret são usados apenas em memória e não são persistidos.
+- Sincronização Tuya Cloud busca local_key e grava diretamente no cofre criptografado.
+- local_key não é devolvida ao aplicativo.
+- Validação de comunicação local automática após a sincronização.
+
 ## 0.4.1
 
 - Fluxo obrigatório: Buscar → Validar → Integrar.
