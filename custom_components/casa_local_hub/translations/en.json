@@ -1,0 +1,27 @@
+{
+  "title": "Casa Local Hub",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect Casa Local Hub",
+        "description": "Open Casa Local Hub in Home Assistant, choose **Connect to Home Assistant**, then enter the temporary code.",
+        "data": {
+          "core_url": "Casa Local Core address",
+          "pairing_code": "Pairing code"
+        },
+        "data_description": {
+          "core_url": "Usually http://127.0.0.1:8799 when Core runs on the same Home Assistant.",
+          "pairing_code": "8-digit code valid for 5 minutes."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to Casa Local Core.",
+      "invalid_pairing_code": "Invalid or expired pairing code.",
+      "not_casa_local": "The address is not a Casa Local Core."
+    },
+    "abort": {
+      "already_configured": "Casa Local Hub is already configured."
+    }
+  }
+}
