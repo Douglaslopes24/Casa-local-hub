@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from casalocal_core.models.device import DeviceKind
-
 
 def _dps_sort_key(value: str) -> tuple[int, str]:
     try:
@@ -34,33 +32,32 @@ def analyze_tuya_dps(status: dict[str, Any]) -> dict[str, Any]:
         key=_dps_sort_key,
     )
 
-    # Tuya lights commonly expose DP 20 as power, while plugs/switches
-    # commonly expose DP 1. These are only heuristics; no command is sent.
+    # Heuristics only. Identification never sends commands.
     if "20" in boolean_dps:
-        kind = DeviceKind.LIGHT
+        kind = "light"
         primary_switch_dps = "20"
     elif "1" in boolean_dps:
-        kind = DeviceKind.SWITCH
+        kind = "switch"
         primary_switch_dps = "1"
     elif boolean_dps:
-        kind = DeviceKind.SWITCH
+        kind = "switch"
         primary_switch_dps = boolean_dps[0]
     else:
-        kind = DeviceKind.UNKNOWN
+        kind = "unknown"
         primary_switch_dps = None
 
     brightness_dps = None
-    if kind == DeviceKind.LIGHT:
+    if kind == "light":
         for candidate in ("22", "3"):
             if candidate in numeric_dps:
                 brightness_dps = candidate
                 break
 
-    color_temp_dps = "23" if kind == DeviceKind.LIGHT and "23" in numeric_dps else None
-    work_mode_dps = "21" if kind == DeviceKind.LIGHT and "21" in string_dps else None
+    color_temp_dps = "23" if kind == "light" and "23" in numeric_dps else None
+    work_mode_dps = "21" if kind == "light" and "21" in string_dps else None
 
     return {
-        "kind": kind.value,
+        "kind": kind,
         "primary_switch_dps": primary_switch_dps,
         "boolean_dps": boolean_dps,
         "numeric_dps": numeric_dps,
