@@ -26,6 +26,8 @@ class LocalCapability(StrEnum):
 class DiscoveredDevice(BaseModel):
     stable_id: str
     name: str | None = None
+    friendly_name: str | None = None
+    area: str | None = None
     vendor: str | None = None
     model: str | None = None
     kind: DeviceKind = DeviceKind.UNKNOWN
