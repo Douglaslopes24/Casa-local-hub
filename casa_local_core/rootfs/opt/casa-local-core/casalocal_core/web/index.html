@@ -38,6 +38,7 @@
     .primary{border:0;border-radius:15px;background:var(--accent);color:var(--accentText);padding:14px 19px;font-weight:720;min-width:180px}
     .primary:hover{filter:brightness(1.05);transform:translateY(-1px)}
     .primary:disabled{opacity:.65;cursor:wait;transform:none}
+    .hero-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
     .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
     .metric{border:1px solid var(--line);border-radius:18px;background:rgba(17,21,26,.7);padding:16px}
     .metric strong{display:block;font-size:26px;letter-spacing:-.04em}
@@ -81,7 +82,7 @@
     .ghost{border:0;background:transparent;color:var(--muted);padding:10px 12px}
     footer{text-align:center;color:#687482;font-size:11px;margin-top:34px}
     @media(max-width:760px){
-      .hero{grid-template-columns:1fr}.hero .primary{width:100%}
+      .hero{grid-template-columns:1fr}.hero .primary{width:100%}.hero-actions{width:100%}.hero-actions .secondary{width:100%}
       .metrics{grid-template-columns:1fr 1fr}.metrics .metric:last-child{grid-column:1/-1}
       .toolbar{align-items:stretch;flex-direction:column}.toolbar-left{width:100%}.search{width:100%}
       .grid{grid-template-columns:1fr}.topbar{align-items:flex-start}.tools{flex-direction:column;align-items:stretch}
@@ -111,7 +112,10 @@
       <h1 data-i18n="headline">Sua casa, simples e sob seu controle.</h1>
       <p data-i18n="intro">Encontre dispositivos da sua rede e prepare o controle local sem depender da Internet.</p>
     </div>
-    <button class="primary" id="scanBtn" onclick="scan()" data-i18n="scan">Buscar dispositivos</button>
+    <div class="hero-actions">
+      <button class="primary" id="scanBtn" onclick="scan()" data-i18n="scan">Buscar dispositivos</button>
+      <button class="secondary" id="pairBtn" onclick="startPairing()" data-i18n="pair">Conectar ao Home Assistant</button>
+    </div>
   </section>
 
   <div id="notice" class="notice"></div>
@@ -135,6 +139,17 @@
   <section id="devicesGrid" class="grid"></section>
   <footer data-i18n="footer">Processamento local · suas credenciais ficam no seu Home Assistant</footer>
 </div>
+
+<dialog id="pairDialog">
+  <div class="modal">
+    <h2 data-i18n="pairTitle">Conectar ao Home Assistant</h2>
+    <p data-i18n="pairCopy">Use este código ao adicionar a integração Casa Local Hub. Ele expira em 5 minutos.</p>
+    <div id="pairCode" style="font-size:38px;font-weight:800;letter-spacing:.16em;text-align:center;padding:18px 8px;border:1px solid var(--line);border-radius:16px;background:#0d1116">--------</div>
+    <div class="modal-actions">
+      <button type="button" class="secondary" onclick="pairDialog.close()" data-i18n="close">Fechar</button>
+    </div>
+  </div>
+</dialog>
 
 <dialog id="editDialog">
   <form method="dialog" class="modal" id="editForm">
@@ -192,6 +207,9 @@ const I18N = {
     saved:'Alterações salvas.', keyOk:'Chave validada. Este dispositivo está pronto para controle local.',
     keyFail:'Não foi possível validar a chave. Confira a local_key e tente novamente.',
     partial:'Alguns módulos de descoberta não responderam nesta busca.',
+    pair:'Conectar ao Home Assistant', pairTitle:'Conectar ao Home Assistant',
+    pairCopy:'Use este código ao adicionar a integração Casa Local Hub. Ele expira em 5 minutos.',
+    close:'Fechar', pairFailed:'Não foi possível iniciar o pareamento.',
     turnOn:'Ligar', turnOff:'Desligar', refreshState:'Atualizar estado', refreshing:'Atualizando…',
     stateOn:'Ligado', stateOff:'Desligado', stateUnknown:'Estado desconhecido',
     commandFailed:'Não foi possível enviar o comando local.'
@@ -216,6 +234,9 @@ const I18N = {
     saved:'Changes saved.', keyOk:'Key validated. This device is ready for local control.',
     keyFail:'The key could not be validated. Check the local_key and try again.',
     partial:'Some discovery modules did not respond during this scan.',
+    pair:'Connect to Home Assistant', pairTitle:'Connect to Home Assistant',
+    pairCopy:'Use this code when adding the Casa Local Hub integration. It expires in 5 minutes.',
+    close:'Close', pairFailed:'Could not start pairing.',
     turnOn:'Turn on', turnOff:'Turn off', refreshState:'Refresh state', refreshing:'Refreshing…',
     stateOn:'On', stateOff:'Off', stateUnknown:'Unknown state',
     commandFailed:'The local command could not be sent.'
@@ -240,6 +261,9 @@ const I18N = {
     saved:'Cambios guardados.', keyOk:'Clave validada. Este dispositivo está listo para control local.',
     keyFail:'No se pudo validar la clave. Revisa la local_key e inténtalo de nuevo.',
     partial:'Algunos módulos de descubrimiento no respondieron en esta búsqueda.',
+    pair:'Conectar a Home Assistant', pairTitle:'Conectar a Home Assistant',
+    pairCopy:'Usa este código al agregar la integración Casa Local Hub. Caduca en 5 minutos.',
+    close:'Cerrar', pairFailed:'No se pudo iniciar el emparejamiento.',
     turnOn:'Encender', turnOff:'Apagar', refreshState:'Actualizar estado', refreshing:'Actualizando…',
     stateOn:'Encendido', stateOff:'Apagado', stateUnknown:'Estado desconocido',
     commandFailed:'No se pudo enviar el comando local.'
@@ -253,6 +277,7 @@ const notice=document.getElementById('notice');
 const scanBtn=document.getElementById('scanBtn');
 const editDialog=document.getElementById('editDialog');
 const keyDialog=document.getElementById('keyDialog');
+const pairDialog=document.getElementById('pairDialog');
 
 function initialLanguage(){
   const saved=localStorage.getItem('clh_language');
@@ -420,6 +445,21 @@ async function toggleTuya(id,dps,value){
     await loadDevices();
   }catch(e){
     notice.textContent=t('commandFailed'); notice.className='notice show';
+  }
+}
+
+async function startPairing(){
+  if(!IS_INGRESS){
+    notice.textContent=t('ingressNeeded'); notice.className='notice show'; return;
+  }
+  try{
+    const response=await fetch('api/v1/pairing/start',{method:'POST'});
+    const data=await response.json();
+    if(!response.ok) throw new Error(data.detail||t('pairFailed'));
+    document.getElementById('pairCode').textContent=data.code||'--------';
+    pairDialog.showModal();
+  }catch(e){
+    notice.textContent=t('pairFailed'); notice.className='notice show';
   }
 }
 
