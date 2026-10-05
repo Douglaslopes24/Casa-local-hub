@@ -54,3 +54,10 @@ No painel do Casa Local Hub, clique em **Conectar ao Home Assistant**. Um códig
 Depois, em **Configurações → Dispositivos e serviços → Adicionar integração**, selecione **Casa Local Hub** e informe o endereço do Core e o código temporário.
 
 A integração recebe um token próprio e usa esse token para consultar estados e enviar comandos locais. As chaves dos dispositivos permanecem somente no cofre do Casa Local Core.
+
+
+## Aplicativo Android
+
+Na v0.5.0 o painel possui **Conectar aplicativo**. O código gerado pode ser usado pelo Casa Local Hub App antes mesmo de existir um dispositivo validado.
+
+O aplicativo pode sincronizar as chaves Tuya sem exibi-las. Access ID e Access Secret são criptografados no celular e processados somente em memória no Core. As `local_key` recuperadas são armazenadas diretamente no cofre local.
