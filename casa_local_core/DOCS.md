@@ -1,7 +1,40 @@
 # Casa Local Core
 
-Executa o motor Casa Local Hub dentro do Home Assistant.
+Motor local do Casa Local Hub.
 
-A API local escuta a porta `8799`.
+## Uso recomendado
 
-Esta versão é experimental e deve ser usada apenas em rede confiável.
+Após instalar e iniciar, use **Abrir interface web** na página do App. Esse caminho usa o Ingress do Home Assistant.
+
+A interface permite:
+
+- descobrir equipamentos da rede;
+- filtrar e pesquisar;
+- renomear dispositivos;
+- atribuir ambientes;
+- selecionar Português (Brasil), English ou Español;
+- preparar credenciais Tuya pelo fluxo protegido do Ingress.
+
+## Estados
+
+**Encontrado** — o aparelho respondeu à descoberta.
+
+**Chave local necessária** — o protocolo foi identificado, mas falta uma credencial local.
+
+**Local pronto** — a credencial foi validada diretamente com o aparelho.
+
+## Segurança
+
+O Casa Local Core mantém dados persistentes em `/data`. Credenciais são criptografadas antes de serem armazenadas.
+
+A porta `8799` existe para desenvolvimento e comunicação local. Não exponha essa porta na Internet.
+
+## API de desenvolvimento
+
+- `GET /health`
+- `GET /api/v1/status`
+- `GET /api/v1/devices`
+- `POST /api/v1/discovery`
+- `PATCH /api/v1/devices/{stable_id}`
+
+O endpoint de credenciais Tuya é restrito ao Home Assistant Ingress.
