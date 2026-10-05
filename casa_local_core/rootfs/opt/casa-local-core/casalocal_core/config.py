@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "Casa Local Core"
-    version: str = "0.2.0"
+    version: str = "0.3.0"
     host: str = "127.0.0.1"
     port: int = 8799
     data_dir: Path = Path("./data")
