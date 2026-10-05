@@ -188,3 +188,63 @@ class DeviceRegistry:
                 (payload, device.last_seen.isoformat(), stable_id),
             )
         return self.get(stable_id)
+
+
+    def update_metadata(
+        self,
+        stable_id: str,
+        metadata_updates: dict,
+    ) -> DiscoveredDevice | None:
+        with self._connect() as db:
+            row = db.execute(
+                "SELECT * FROM devices WHERE stable_id = ?",
+                (stable_id,),
+            ).fetchone()
+            if not row:
+                return None
+
+            device = self._row_to_device(db, row)
+            device.metadata.update(metadata_updates)
+            device.last_seen = datetime.now(UTC)
+            payload = json.dumps(device.model_dump(mode="json"), ensure_ascii=False)
+            db.execute(
+                "UPDATE devices SET payload = ?, last_seen = ? WHERE stable_id = ?",
+                (payload, device.last_seen.isoformat(), stable_id),
+            )
+        return self.get(stable_id)
+
+    def migrate_validation_semantics(self) -> None:
+        with self._connect() as db:
+            rows = db.execute("SELECT * FROM devices").fetchall()
+            for row in rows:
+                device = self._row_to_device(db, row)
+                validation = device.metadata.get("validation")
+                if isinstance(validation, dict):
+                    continue
+
+                if (
+                    device.protocol.startswith("tuya")
+                    and device.capability == LocalCapability.LOCAL_CONTROL_READY
+                ):
+                    device.capability = LocalCapability.LOCAL_CONTROL_POSSIBLE
+                    device.metadata["validation"] = {
+                        "communication": "passed",
+                        "control": "not_tested",
+                        "integratable": False,
+                        "migrated": True,
+                        "checked_at": datetime.now(UTC).isoformat(),
+                    }
+                else:
+                    device.metadata["validation"] = {
+                        "communication": "not_tested",
+                        "control": "not_tested",
+                        "integratable": False,
+                        "migrated": True,
+                        "checked_at": None,
+                    }
+
+                payload = json.dumps(device.model_dump(mode="json"), ensure_ascii=False)
+                db.execute(
+                    "UPDATE devices SET payload = ? WHERE stable_id = ?",
+                    (payload, device.stable_id),
+                )
