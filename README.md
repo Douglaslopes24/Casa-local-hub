@@ -4,7 +4,7 @@
 
 Casa Local Hub é uma plataforma local-first para descobrir, organizar e preparar dispositivos de automação residencial para uso local com Home Assistant.
 
-> **v0.4.0 — experimental.** Use apenas em uma rede local confiável.
+> **v0.4.1 — experimental.** Use apenas em uma rede local confiável.
 
 ## Instalação
 
@@ -82,3 +82,15 @@ Dispositivos Tuya com status **Local pronto** podem aparecer automaticamente com
 - `light` para lâmpadas identificadas.
 
 O estado é consultado localmente e os comandos passam pelo Casa Local Core.
+
+
+## Fluxo de validação
+
+O Casa Local Hub segue esta ordem antes de expor qualquer dispositivo ao Home Assistant:
+
+1. **Buscar** — encontra o equipamento na rede local.
+2. **Validar comunicação** — comprova que o Core consegue ler o aparelho localmente.
+3. **Validar controle** — o usuário envia conscientemente um comando de teste e o Core confirma o estado retornado.
+4. **Integrar** — somente então o aparelho fica disponível para a integração do Home Assistant.
+
+Encontrar um dispositivo ou possuir uma `local_key` válida não é suficiente para chamá-lo de compatível. O status **Dispositivo validado** só é concedido após confirmação real de controle local.
