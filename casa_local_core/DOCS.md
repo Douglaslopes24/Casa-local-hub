@@ -45,3 +45,12 @@ O endpoint de credenciais Tuya é restrito ao Home Assistant Ingress.
 Após validar uma chave local, o Casa Local Core lê os DPS e identifica, por heurística, o tipo provável do dispositivo. Nenhum comando é enviado durante essa identificação.
 
 Quando um DPS booleano é reconhecido como controle principal, a interface disponibiliza **Ligar/Desligar**. O usuário precisa acionar o comando explicitamente.
+
+
+## Conectar a integração do Home Assistant
+
+No painel do Casa Local Hub, clique em **Conectar ao Home Assistant**. Um código de 8 dígitos será exibido por 5 minutos.
+
+Depois, em **Configurações → Dispositivos e serviços → Adicionar integração**, selecione **Casa Local Hub** e informe o endereço do Core e o código temporário.
+
+A integração recebe um token próprio e usa esse token para consultar estados e enviar comandos locais. As chaves dos dispositivos permanecem somente no cofre do Casa Local Core.
