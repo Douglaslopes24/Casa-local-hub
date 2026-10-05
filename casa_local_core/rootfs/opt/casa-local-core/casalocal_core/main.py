@@ -168,6 +168,12 @@ async def start_pairing(request: Request) -> dict:
     return app.state.pairing.start()
 
 
+@app.post("/api/v1/mobile/pairing/start")
+async def start_mobile_pairing(request: Request) -> dict:
+    require_ingress(request)
+    return app.state.pairing.start()
+
+
 @app.post("/api/v1/pairing/complete")
 async def complete_pairing(payload: dict) -> dict:
     code = str(payload.get("code") or "").strip()
