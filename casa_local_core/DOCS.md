@@ -38,3 +38,10 @@ A porta `8799` existe para desenvolvimento e comunicação local. Não exponha e
 - `PATCH /api/v1/devices/{stable_id}`
 
 O endpoint de credenciais Tuya é restrito ao Home Assistant Ingress.
+
+
+## Controle local Tuya
+
+Após validar uma chave local, o Casa Local Core lê os DPS e identifica, por heurística, o tipo provável do dispositivo. Nenhum comando é enviado durante essa identificação.
+
+Quando um DPS booleano é reconhecido como controle principal, a interface disponibiliza **Ligar/Desligar**. O usuário precisa acionar o comando explicitamente.
