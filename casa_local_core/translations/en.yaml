@@ -1,0 +1,4 @@
+configuration:
+  discovery_timeout:
+    name: "Discovery time"
+    description: "Maximum time, in seconds, used for each local network device scan."
