@@ -4,7 +4,7 @@
 
 Casa Local Hub é uma plataforma local-first para descobrir, organizar e preparar dispositivos de automação residencial para uso local com Home Assistant.
 
-> **v0.4.1 — experimental.** Use apenas em uma rede local confiável.
+> **v0.5.0 — experimental.** Use apenas em uma rede local confiável.
 
 ## Instalação
 
@@ -94,3 +94,20 @@ O Casa Local Hub segue esta ordem antes de expor qualquer dispositivo ao Home As
 4. **Integrar** — somente então o aparelho fica disponível para a integração do Home Assistant.
 
 Encontrar um dispositivo ou possuir uma `local_key` válida não é suficiente para chamá-lo de compatível. O status **Dispositivo validado** só é concedido após confirmação real de controle local.
+
+
+## Aplicativo Android
+
+A primeira versão experimental do **Casa Local Hub App** está disponível na Release `android-v0.1.0`.
+
+Fluxo do aplicativo:
+
+1. encontra o Casa Local Core por mDNS;
+2. pareia com um código temporário gerado pelo painel;
+3. recebe Access ID, Access Secret, região e um Device ID do projeto Tuya;
+4. cifra as credenciais no próprio celular com AES-256-GCM e a chave pública RSA do Core;
+5. o Core consulta a Tuya Cloud e grava as `local_key` diretamente no cofre;
+6. a chave local nunca é devolvida ao aplicativo;
+7. o usuário valida comunicação e controle pelo celular.
+
+Antes de usar o APK, atualize o **Casa Local Core para v0.5.0**.
