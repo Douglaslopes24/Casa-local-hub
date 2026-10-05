@@ -13,6 +13,8 @@ from casalocal_core.models.device import LocalCapability
 from casalocal_core.services.discovery import DiscoveryManager
 from casalocal_core.services.registry import DeviceRegistry
 from casalocal_core.services.pairing import PairingError, PairingService
+from casalocal_core.services.mobile_crypto import MobileCrypto, MobileCryptoError
+from casalocal_core.services.tuya_cloud import TuyaCloudError, TuyaCloudSync
 from casalocal_core.services.tuya_control import (
     TuyaControlError,
     TuyaController,
@@ -92,6 +94,15 @@ async def lifespan(app: FastAPI):
     app.state.vault = LocalVault(settings.database_path, settings.master_key_path)
     app.state.tuya = TuyaController()
     app.state.pairing = PairingService(settings.database_path)
+    app.state.mobile_crypto = MobileCrypto(
+        settings.mobile_private_key_path,
+        settings.mobile_public_key_path,
+    )
+    app.state.tuya_cloud = TuyaCloudSync(
+        registry,
+        app.state.vault,
+        app.state.tuya,
+    )
     yield
 
 
@@ -186,6 +197,53 @@ async def devices() -> dict:
         "count": len(known),
         "devices": [device.model_dump(mode="json") for device in known],
     }
+
+
+@app.get("/api/v1/mobile/devices")
+async def mobile_devices(request: Request) -> dict:
+    require_ingress_or_api(request)
+    known = app.state.registry.all()
+    return {
+        "count": len(known),
+        "devices": [device.model_dump(mode="json") for device in known],
+    }
+
+
+@app.get("/api/v1/mobile/public-key")
+async def mobile_public_key(request: Request) -> dict:
+    require_ingress_or_api(request)
+    return app.state.mobile_crypto.public_info()
+
+
+@app.post("/api/v1/mobile/tuya/cloud-sync")
+async def mobile_tuya_cloud_sync(payload: dict, request: Request) -> dict:
+    require_ingress_or_api(request)
+    try:
+        credentials = app.state.mobile_crypto.decrypt_payload(payload)
+    except MobileCryptoError as exc:
+        raise HTTPException(status_code=400, detail="Invalid encrypted payload") from exc
+
+    api_key = str(credentials.get("api_key") or "").strip()
+    api_secret = str(credentials.get("api_secret") or "").strip()
+    region = str(credentials.get("region") or "").strip()
+    device_id = str(credentials.get("device_id") or "").strip()
+
+    if not all((api_key, api_secret, region, device_id)):
+        raise HTTPException(status_code=400, detail="Missing Tuya Cloud credentials")
+
+    try:
+        result = await app.state.tuya_cloud.sync(
+            api_key=api_key,
+            api_secret=api_secret,
+            region=region,
+            device_id=device_id,
+        )
+    except TuyaCloudError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    finally:
+        credentials.clear()
+
+    return result
 
 
 @app.patch("/api/v1/devices/{stable_id}")
