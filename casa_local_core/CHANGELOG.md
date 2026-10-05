@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.1
+
+- Fluxo obrigatório: Buscar → Validar → Integrar.
+- Uma local_key válida comprova comunicação local, não controle.
+- Dispositivo só fica pronto após comando explícito confirmado por leitura de estado.
+- Dispositivos antigos são migrados para a nova semântica de validação.
+- Pareamento com Home Assistant é bloqueado até existir ao menos um dispositivo validado.
+- A integração recebe somente dispositivos marcados como integráveis.
+- Painel diferencia comunicação validada de controle validado.
+
 ## 0.4.0
 
 - Pareamento seguro entre Casa Local Core e integração Home Assistant.
