@@ -1,0 +1,13 @@
+{
+  "domain": "casa_local_hub",
+  "name": "Casa Local Hub",
+  "codeowners": ["@Douglaslopes24"],
+  "config_flow": true,
+  "documentation": "https://github.com/Douglaslopes24/Casa-local-hub",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/Douglaslopes24/Casa-local-hub/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.1.0"
+}
