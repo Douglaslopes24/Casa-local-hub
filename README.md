@@ -2,36 +2,49 @@
 
 **Sua casa. Seu controle. Local.**
 
-Casa Local Hub é uma plataforma local-first para descobrir e integrar dispositivos de automação residencial ao Home Assistant com a menor dependência possível de nuvem.
+Casa Local Hub é uma plataforma local-first para descobrir, organizar e preparar dispositivos de automação residencial para uso local com Home Assistant.
 
-> **v0.1.1 — experimental.** Use apenas em uma rede local confiável.
+> **v0.2.0 — experimental.** Use apenas em uma rede local confiável.
 
-## Instalação do Casa Local Core
+## Instalação
 
-No Home Assistant, abra **Configurações → Apps → Loja de Apps**, adicione este repositório:
+No Home Assistant, abra **Configurações → Apps → Loja de Apps** e adicione este repositório:
 
 `https://github.com/Douglaslopes24/Casa-local-hub`
 
-Depois atualize a loja, abra **Casa Local Core**, instale e inicie.
+Depois procure por **Casa Local Core**, instale e inicie.
 
-Quando estiver rodando, teste:
+A partir da v0.2.0, o App oferece **Ingress**. Prefira abrir pelo botão **Abrir interface web** dentro do Home Assistant.
 
-`http://IP_DO_HOME_ASSISTANT:8799/health`
+## Interface
 
-A porta 8799 é destinada somente à rede local. Não faça port-forward dela para a Internet.
+O painel inclui:
+
+- Português (Brasil), English e Español.
+- Busca e filtros de dispositivos.
+- Nome amigável e ambiente.
+- Persistência local em SQLite.
+- Estados simplificados: encontrado, precisa de chave e local pronto.
 
 ## Protocolos iniciais
 
-- Tuya/OEM — descoberta LAN.
+- Tuya/OEM — descoberta LAN e validação de `local_key`.
 - Sonoff/eWeLink — descoberta mDNS.
 - Câmeras — descoberta ONVIF via WS-Discovery.
 
-Descobrir um dispositivo não significa afirmar compatibilidade. O Casa Local Hub só deverá mostrar **Local pronto** depois de validar o controle local.
+Descobrir um dispositivo não significa afirmar compatibilidade. O Casa Local Hub só mostra **Local pronto** depois de validar o caminho local.
+
+## Segurança
+
+- Credenciais não são gravadas em texto puro.
+- O cofre usa criptografia local e chave mestra armazenada em `/data` dentro do App.
+- Cadastro de credenciais Tuya é aceito apenas via Home Assistant Ingress.
+- Não faça port-forward da porta 8799 para a Internet.
+- Chaves locais nunca são retornadas pela API.
 
 ## Roadmap
 
-- **v0.1.x:** descoberta e estabilidade.
-- **v0.2:** identidade do hub, QR Code e pareamento autenticado.
-- **v0.3:** controle local Tuya/Sonoff e ONVIF/RTSP.
-- **v0.4:** aplicativo Android.
-- **v0.5:** experiência Home Assistant completa.
+- **v0.2.x:** painel, persistência, Ingress e cofre local.
+- **v0.3:** identificação de DPS e controle local Tuya.
+- **v0.4:** integração Home Assistant com entidades.
+- **v0.5:** aplicativo Android e provisionamento guiado.
