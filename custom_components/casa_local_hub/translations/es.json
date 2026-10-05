@@ -1,0 +1,27 @@
+{
+  "title": "Casa Local Hub",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Conectar Casa Local Hub",
+        "description": "Abre Casa Local Hub en Home Assistant, toca **Conectar a Home Assistant** e introduce el código temporal.",
+        "data": {
+          "core_url": "Dirección de Casa Local Core",
+          "pairing_code": "Código de emparejamiento"
+        },
+        "data_description": {
+          "core_url": "Normalmente http://127.0.0.1:8799 cuando Core se ejecuta en el mismo Home Assistant.",
+          "pairing_code": "Código de 8 dígitos válido durante 5 minutos."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "No se pudo conectar a Casa Local Core.",
+      "invalid_pairing_code": "Código inválido o caducado.",
+      "not_casa_local": "La dirección no corresponde a Casa Local Core."
+    },
+    "abort": {
+      "already_configured": "Casa Local Hub ya está configurado."
+    }
+  }
+}
