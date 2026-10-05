@@ -86,6 +86,7 @@ def get_ready_tuya(stable_id: str):
 async def lifespan(app: FastAPI):
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     registry = DeviceRegistry(settings.database_path)
+    registry.migrate_validation_semantics()
     app.state.registry = registry
     app.state.discovery = DiscoveryManager(registry)
     app.state.vault = LocalVault(settings.database_path, settings.master_key_path)
@@ -232,17 +233,23 @@ async def set_tuya_credentials(stable_id: str, payload: dict, request: Request) 
     app.state.vault.set_secret(stable_id, "tuya_local_key", local_key)
     app.state.registry.set_capability(
         stable_id,
-        LocalCapability.LOCAL_CONTROL_READY,
+        LocalCapability.LOCAL_CONTROL_POSSIBLE,
         {
             "credential_validated_at": datetime.now(UTC).isoformat(),
             "credential_source": "manual_ingress",
+            "validation": {
+                "communication": "passed",
+                "control": "not_tested",
+                "integratable": False,
+                "checked_at": datetime.now(UTC).isoformat(),
+            },
         },
     )
     persist_tuya_profile(stable_id, profile)
     updated = app.state.registry.get(stable_id)
 
     return {
-        "status": "ready",
+        "status": "communication_validated",
         "profile": {key: value for key, value in profile.items() if key != "dps"},
         "device": updated.model_dump(mode="json") if updated else None,
     }
@@ -296,11 +303,76 @@ async def control_tuya(stable_id: str, payload: dict, request: Request) -> dict:
         raise HTTPException(status_code=502, detail="Local command failed") from exc
 
     persist_tuya_profile(stable_id, refreshed_profile)
+
+    returned_dps = refreshed_profile.get("dps") or {}
+    actual_value = returned_dps.get(requested_dps)
+    control_validated = isinstance(actual_value, bool) and actual_value is value
+
+    if control_validated:
+        app.state.registry.set_capability(
+            stable_id,
+            LocalCapability.LOCAL_CONTROL_READY,
+            {
+                "validation": {
+                    "communication": "passed",
+                    "control": "passed",
+                    "integratable": True,
+                    "checked_at": datetime.now(UTC).isoformat(),
+                    "validated_dps": requested_dps,
+                },
+            },
+        )
+    else:
+        app.state.registry.set_capability(
+            stable_id,
+            LocalCapability.LOCAL_CONTROL_POSSIBLE,
+            {
+                "validation": {
+                    "communication": "passed",
+                    "control": "failed",
+                    "integratable": False,
+                    "checked_at": datetime.now(UTC).isoformat(),
+                    "validated_dps": requested_dps,
+                },
+            },
+        )
+
     updated = app.state.registry.get(stable_id)
     return {
-        "status": "ok",
-        "dps": refreshed_profile.get("dps") or {},
+        "status": "control_validated" if control_validated else "control_not_confirmed",
+        "control_validated": control_validated,
+        "dps": returned_dps,
         "device": updated.model_dump(mode="json") if updated else None,
+    }
+
+
+@app.get("/api/v1/validation")
+async def validation_summary() -> dict:
+    known = app.state.registry.all()
+    items = []
+    for device in known:
+        validation = device.metadata.get("validation")
+        if not isinstance(validation, dict):
+            validation = {
+                "communication": "not_tested",
+                "control": "not_tested",
+                "integratable": False,
+            }
+        items.append(
+            {
+                "stable_id": device.stable_id,
+                "name": device.friendly_name or device.name,
+                "protocol": device.protocol,
+                "kind": device.kind.value,
+                "capability": device.capability.value,
+                "validation": validation,
+            }
+        )
+
+    return {
+        "count": len(items),
+        "integratable": sum(1 for item in items if item["validation"].get("integratable") is True),
+        "devices": items,
     }
 
 
