@@ -1,5 +1,5 @@
 name: "Casa Local Core"
-version: "0.1.4"
+version: "0.2.0"
 slug: "casa_local_core"
 description: "Motor local do Casa Local Hub para descoberta e integração de dispositivos."
 url: "https://github.com/Douglaslopes24/Casa-local-hub"
@@ -7,6 +7,11 @@ startup: application
 boot: auto
 stage: experimental
 host_network: true
+ingress: true
+ingress_port: 8799
+panel_icon: mdi:home
+panel_title: "Casa Local Hub"
+panel_admin: true
 init: false
 arch:
   - aarch64
