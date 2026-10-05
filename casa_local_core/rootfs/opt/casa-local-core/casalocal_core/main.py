@@ -27,6 +27,20 @@ app = FastAPI(
 )
 
 
+@app.get("/")
+async def root() -> dict[str, str]:
+    return {
+        "name": "Casa Local Hub",
+        "service": "Casa Local Core",
+        "status": "online",
+        "version": settings.version,
+        "message": "Sua casa. Seu controle. Local.",
+        "health": "/health",
+        "api_status": "/api/v1/status",
+        "docs": "/docs",
+    }
+
+
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok", "service": "casa-local-core", "version": settings.version}
