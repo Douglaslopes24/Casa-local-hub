@@ -1,0 +1,23 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Compile Python sources
+        run: python -m compileall -q casa_local_core/rootfs/opt/casa-local-core/casalocal_core
+      - name: Check required app files
+        run: |
+          test -f repository.yaml
+          test -f casa_local_core/config.yaml
+          test -f casa_local_core/Dockerfile
+          test -f casa_local_core/rootfs/opt/casa-local-core/casalocal_core/web/index.html
